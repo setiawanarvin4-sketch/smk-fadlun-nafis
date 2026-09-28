@@ -9,7 +9,13 @@
     <!-- PERLU TINDAKAN -->
     @if($izinMenunggu || $loginGagal24Jam)
         <div class="bg-white border-2 border-red-100 rounded-2xl p-5 mb-6">
-            <p class="text-sm font-bold text-red-600 mb-3 flex items-center gap-1.5">⚠️ Perlu Tindakan</p>
+            <p class="text-sm font-bold text-red-600 mb-3 flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01M10.3 4.6l-7.1 12a2 2 0 001.7 3h14.2a2 2 0 001.7-3l-7.1-12a2 2 0 00-3.4 0z"/>
+                </svg>
+                Perlu Tindakan
+            </p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 @if($izinMenunggu)
                     <a href="{{ route('admin.absensi') }}" class="flex items-center justify-between bg-red-50 hover:bg-red-100 rounded-xl px-4 py-3 transition-colors">
@@ -64,6 +70,16 @@
                 <p class="text-2xl font-extrabold text-navy tracking-tight">{{ $jumlahKompetensi }}</p>
                 <p class="text-xs text-[#667085]">Kompetensi Keahlian</p>
             </div>
+        </div>
+    </div>
+
+    <div class="card-premium p-4 flex items-center gap-3 mb-6">
+        <span class="w-2.5 h-2.5 rounded-full {{ $cronSehat ? 'bg-green-500' : 'bg-red-500' }}"></span>
+        <div>
+            <p class="text-xs font-semibold text-navy">Kesehatan Cron Server</p>
+            <p class="text-xs text-[#667085]">
+                {{ $cronTerakhir ? 'Terakhir aktif '.\Carbon\Carbon::parse($cronTerakhir)->diffForHumans() : 'Belum pernah terdeteksi jalan' }}
+            </p>
         </div>
     </div>
 
@@ -128,6 +144,55 @@
                 </div>
             </div>
 
+            <!-- GURU BELUM ABSEN & TIDAK HADIR HARI INI -->
+            @if($guruBelumAbsen->isNotEmpty() || $guruTidakHadirHariIni->isNotEmpty())
+                <div class="card-premium hover:-translate-y-0 p-6">
+                    @if($guruBelumAbsen->isNotEmpty())
+                        <p class="text-sm font-semibold text-navy mb-2">⚠️ Belum Isi Absensi ({{ $guruBelumAbsen->count() }})</p>
+                        <div class="divide-y divide-[#E5E7EB] mb-4">
+                            @foreach($guruBelumAbsen as $j)
+                                <div class="py-2 text-sm flex justify-between">
+                                    <span class="text-navy font-medium">{{ $j->guru->nama }}</span>
+                                    <span class="text-xs text-[#667085]">{{ $j->kelas->nama_kelas }} · {{ $j->mataPelajaran->nama }} · {{ substr($j->jam_mulai, 0, 5) }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                    @if($guruTidakHadirHariIni->isNotEmpty())
+                        <p class="text-sm font-semibold text-navy mb-2">Guru Tidak Hadir Hari Ini ({{ $guruTidakHadirHariIni->count() }})</p>
+                        <div class="divide-y divide-[#E5E7EB]">
+                            @foreach($guruTidakHadirHariIni as $t)
+                                <div class="py-2 text-sm flex justify-between">
+                                    <span class="text-navy font-medium">{{ $t->guru->nama }}</span>
+                                    <span class="text-xs text-[#667085]">{{ $t->kelas->nama_kelas }} · {{ $t->alasan }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+                        @endif
+
+            @if($guruTanpaWa > 0 || $siswaTanpaWaWali > 0)
+                <div class="card-premium hover:-translate-y-0 p-6 border-2 border-amber-100">
+                    <p class="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01M10.3 4.6l-7.1 12a2 2 0 001.7 3h14.2a2 2 0 001.7-3l-7.1-12a2 2 0 00-3.4 0z"/>
+                        </svg>
+                        Data Kontak WA Belum Lengkap
+                    </p>
+                                        <div class="space-y-1 text-sm text-[#475467]">
+                        @if($guruTanpaWa > 0)
+                            <p>{{ $guruTanpaWa }} dari {{ $totalGuru }} guru belum punya nomor WA</p>
+                        @endif
+                        @if($siswaTanpaWaWali > 0)
+                            <p>{{ $siswaTanpaWaWali }} dari {{ $totalSiswa }} siswa belum ada kontak WA wali</p>
+                        @endif
+                    </div>
+                    <p class="text-xs text-[#667085] mt-2">Notifikasi otomatis (pengingat guru, Alpha ke ortu) tidak akan terkirim untuk data yang kosong ini.</p>
+                </div>
+            @endif
+
             <!-- AKTIVITAS TERBARU -->
             <div class="card-premium overflow-hidden hover:-translate-y-0">
                 <div class="p-4 border-b border-[#E5E7EB] flex justify-between items-center">
@@ -154,6 +219,26 @@
 
         <!-- KOLOM KANAN -->
         <div class="space-y-4">
+            @if($agendaTerdekat->isNotEmpty() || $hariKhususTerdekat->isNotEmpty())
+                <div class="card-premium hover:-translate-y-0 p-6">
+                    <p class="text-sm font-semibold text-navy mb-3">Agenda & Hari Khusus Terdekat</p>
+                    <div class="space-y-2">
+                        @foreach($agendaTerdekat as $a)
+                            <div class="text-sm px-3 py-2 rounded-lg bg-[#F6F7FA]">
+                                <p class="font-medium text-navy line-clamp-1">{{ $a->judul }}</p>
+                                <p class="text-xs text-[#667085]">{{ $a->tanggal->translatedFormat('d M Y') }}{{ $a->jam ? ' · '.$a->jam : '' }}</p>
+                            </div>
+                        @endforeach
+                        @foreach($hariKhususTerdekat as $h)
+                            <div class="text-sm px-3 py-2 rounded-lg bg-amber-50">
+                                <p class="font-medium text-navy">Pulang Cepat: {{ $h->jam_pulang }}</p>
+                                <p class="text-xs text-[#667085]">{{ \Carbon\Carbon::parse($h->tanggal)->translatedFormat('d M Y') }}{{ $h->keterangan ? ' · '.$h->keterangan : '' }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <!-- BERITA TERBARU -->
             <div class="card-premium hover:-translate-y-0 overflow-hidden">
                 <div class="p-4 border-b border-[#E5E7EB] flex justify-between items-center">
@@ -197,10 +282,13 @@
             <div class="card-premium p-6 hover:-translate-y-0">
                 <p class="text-sm font-semibold text-navy mb-3">Akses Cepat</p>
                 <div class="space-y-2">
-                    <a href="{{ route('admin.siswa') }}" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">+ Tambah Siswa</a>
-                    <a href="{{ route('admin.berita') }}" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">+ Tulis Berita</a>
+                    @can('kelola-data')
+                        <a href="{{ route('admin.siswa') }}" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">+ Tambah Siswa</a>
+                        <a href="{{ route('admin.berita') }}" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">+ Tulis Berita</a>
+                    @endcan
                     <a href="{{ route('admin.absensi') }}" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">Lihat Rekap Absensi</a>
-                </div>
+                    <a href="{{ route('admin.cetak.siswa') }}" target="_blank" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">Cetak Data Siswa</a>
+                    <a href="{{ route('admin.cetak.guru') }}" target="_blank" class="block text-sm px-3 py-2 rounded-lg bg-[#F6F7FA] hover:bg-light-blue hover:text-accent-blue transition-colors">Cetak Data Guru</a>                </div>
             </div>
         </div>
     </div>

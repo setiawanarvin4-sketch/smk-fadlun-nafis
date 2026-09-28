@@ -28,7 +28,7 @@ class Profil extends Component
             Storage::disk('public')->delete($guru->foto);
         }
 
-        $guru->update(['foto' => $this->foto->store('guru', 'public')]);
+        $guru->update(['foto' => \App\Support\ImageUploader::simpan($this->foto, 'guru', 400)]);
 
         ActivityLog::catat('Mengubah Foto Profil', 'Guru', $guru->id);
         $this->dispatch('notify', message: 'Foto profil berhasil diperbarui.', type: 'success');

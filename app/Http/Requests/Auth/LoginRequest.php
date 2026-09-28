@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use App\Models\BlockedIp;
 
 class LoginRequest extends FormRequest
 {
@@ -61,14 +62,18 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
+        if (BlockedIp::sedangDiblokir($this->ip())) {
+            throw ValidationException::withMessages([
+                'email' => 'Akses dari alamat IP Anda telah diblokir sementara karena percobaan login mencurigakan. Hubungi admin sekolah untuk membuka blokir.',
+            ]);
+        }
+
         if (RateLimiter::tooManyAttempts('login-ip:'.$this->ip(), 20)) {
+            BlockedIp::blokir($this->ip(), 'Otomatis: lebih dari 20 percobaan login gagal dalam waktu singkat (Portal Admin).');
             event(new Lockout($this));
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.throttle', [
-                    'seconds' => RateLimiter::availableIn('login-ip:'.$this->ip()),
-                    'minutes' => ceil(RateLimiter::availableIn('login-ip:'.$this->ip()) / 60),
-                ]),
+                'email' => 'Akses dari alamat IP Anda telah diblokir sementara karena percobaan login mencurigakan. Hubungi admin sekolah untuk membuka blokir.',
             ]);
         }
 

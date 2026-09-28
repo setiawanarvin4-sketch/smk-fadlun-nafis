@@ -11,7 +11,7 @@ class SesiMengajar extends Model
 protected $fillable = [
     'guru_id', 'kelas_id', 'mata_pelajaran_id', 'jadwal_pelajaran_id', 'jadwal_pengganti_id',
     'materi', 'kegiatan', 'kendala',
-    'tanggal', 'waktu_mulai', 'status_kedatangan', 'waktu_selesai', 'selfie_masuk_path', 'selfie_pulang_path',
+    'tanggal', 'waktu_mulai', 'status_kedatangan', 'waktu_selesai',
 ];
 
     protected function casts(): array

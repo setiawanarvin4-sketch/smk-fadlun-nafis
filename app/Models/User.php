@@ -10,10 +10,15 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'role'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'nama_pena'];
 
-    protected $hidden = ['password', 'remember_token', 'two_factor_secret'];
+    protected $hidden = ['password', 'remember_token', 'two_factor_code'];
 
+    public function getNamaTampilanAttribute(): string
+    {
+        return $this->nama_pena ?: $this->name;
+    }
+    
     protected function casts(): array
     {
         return [

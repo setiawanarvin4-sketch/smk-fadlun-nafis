@@ -50,7 +50,7 @@ class Index extends Component
 
     public function save()
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
 
         $this->validate([
             'judul' => 'required|string|max:255',
@@ -64,6 +64,7 @@ class Index extends Component
             'jam' => $this->jam ?: null,
             'lokasi' => $this->lokasi,
             'deskripsi' => $this->deskripsi,
+            'user_id' => $this->editId ? null : auth()->id(),
         ];
 
         if ($this->foto) {
@@ -73,10 +74,11 @@ class Index extends Component
                     Storage::disk('public')->delete($old);
                 }
             }
-            $data['foto'] = $this->foto->store('agenda', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'agenda', 1200);
         }
 
         if ($this->editId) {
+            unset($data['user_id']);
             Agenda::findOrFail($this->editId)->update($data);
             ActivityLog::catat('Mengubah Agenda', 'Agenda', $this->editId);
         } else {
@@ -100,7 +102,7 @@ class Index extends Component
 
     public function delete(int $id)
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
 
         $a = Agenda::findOrFail($id);
         if ($a->foto) {

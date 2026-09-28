@@ -22,6 +22,15 @@
             @endif
         </div>
         <div>
+            <label class="text-sm text-[#667085]">Link Video Profil (opsional — tampil di Beranda)</label>
+            <input type="url" wire:model="video_profil_url" placeholder="https://www.youtube.com/watch?v=xxxxxxx"
+                   class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1 text-sm">
+            <p class="text-xs text-[#667085] mt-1">Tempel link video YouTube (atau link video lain yang bisa di-embed). Kosongkan kalau belum ada / tidak ingin ditampilkan.</p>
+            @error('video_profil_url')
+                <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mt-2">⚠️ {{ $message }}</div>
+            @enderror
+        </div>
+        <div>
             <label class="text-sm text-[#667085]">Profil Sekolah</label>
             <textarea wire:model="profil" rows="3" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1"></textarea>
         </div>

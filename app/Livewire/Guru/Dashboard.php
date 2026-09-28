@@ -14,9 +14,12 @@ class Dashboard extends Component
 
     public bool $showDetail = false;
     public ?SesiMengajar $detailSesi = null;
+    public ?Guru $guru = null;
 
     public function mount()
     {
+        $this->guru = Guru::where('user_id', auth()->id())->firstOrFail();
+
         if (session('info')) {
             $this->dispatch('notify', message: session('info'), type: 'success');
         }
@@ -24,10 +27,8 @@ class Dashboard extends Component
 
     public function openDetail(int $sesiId)
     {
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
-
         $sesi = SesiMengajar::with(['kelas', 'mataPelajaran', 'absensi.siswa'])
-            ->where('guru_id', $guru->id)
+            ->where('guru_id', $this->guru->id)
             ->find($sesiId);
 
         if (! $sesi) return;
@@ -38,7 +39,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         $riwayat = SesiMengajar::with(['kelas', 'mataPelajaran', 'absensi'])
             ->where('guru_id', $guru->id)
@@ -63,7 +64,7 @@ class Dashboard extends Component
             'guru' => $guru,
             'riwayat' => $riwayat,
             'absenHariIni' => $absenHariIni,
-            'totalKelas' => Kelas::count(),
+            'totalKelas' => Kelas::where('tahun_ajaran', \App\Models\PengaturanSitus::current()->tahun_ajaran_aktif)->count(),
             'totalSesiBulanIni' => $totalSesiBulanIni,
             'persenTepatWaktu' => $persenTepatWaktu,
             'pengumumanGuru' => \App\Models\PengumumanGuru::where('aktif', true)->latest()->limit(3)->get(),

@@ -64,7 +64,7 @@ class Index extends Component
             if ($p->banner) {
                 Storage::disk('public')->delete($p->banner);
             }
-            $data['banner'] = $this->banner->store('ppdb', 'public');
+            $data['banner'] = \App\Support\ImageUploader::simpan($this->banner, 'ppdb', 1200);
         }
 
         $p->update($data);

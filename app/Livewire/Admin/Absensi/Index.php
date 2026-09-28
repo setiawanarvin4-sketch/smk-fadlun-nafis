@@ -66,7 +66,21 @@ class Index extends Component
         session()->flash('success', 'Laporan ketidakhadiran guru ditolak.');
     }
 
-        public function exportExcel()
+    public function batalkanSesi(int $sesiId)
+    {
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403);
+
+        $sesi = \App\Models\SesiMengajar::findOrFail($sesiId);
+
+        \App\Models\Absensi::where('sesi_mengajar_id', $sesiId)->delete();
+        $sesi->delete();
+
+        ActivityLog::catat('Membatalkan Sesi Mengajar (salah pilih kelas)', 'Absensi', $sesiId);
+        session()->flash('success', 'Sesi berhasil dibatalkan. Guru bisa memilih jadwal yang benar lagi.');
+        $this->dispatch('$refresh');
+    }
+
+    public function exportExcel()
     {
         ActivityLog::catat('Export Rekap Absensi ke Excel', 'Absensi');
         $mulai = null;

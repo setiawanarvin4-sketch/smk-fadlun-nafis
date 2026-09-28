@@ -8,6 +8,9 @@ use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Imports\GuruImport;
+use App\Exports\GuruTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class Index extends Component
 {
@@ -28,6 +31,10 @@ class Index extends Component
     public array $jadwalTerdampak = [];
     public array $mapel_ids = [];
     public bool $showModal = false;
+    public bool $showImportModal = false;
+    public $fileImport = null;
+    public ?int $importBerhasil = null;
+    public array $importGagal = [];
 
     public function create()
     {
@@ -183,6 +190,39 @@ class Index extends Component
 
         $this->konfirmasiHapusId = null;
         session()->flash('success', 'Data guru berhasil dihapus.');
+    }
+
+    public function downloadTemplate()
+    {
+        return Excel::download(new GuruTemplateExport, 'template-import-guru.xlsx');
+    }
+
+    public function openImportModal()
+    {
+        $this->reset(['fileImport', 'importBerhasil', 'importGagal']);
+        $this->showImportModal = true;
+    }
+
+    public function importExcel()
+    {
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengimpor data.');
+
+        $this->validate([
+            'fileImport' => 'required|file|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        $import = new GuruImport;
+        Excel::import($import, $this->fileImport->getRealPath());
+
+        $this->importBerhasil = $import->berhasil;
+        $this->importGagal = $import->gagal;
+        $this->fileImport = null;
+
+        ActivityLog::catat('Import Data Guru dari Excel', 'Guru', null);
+
+        if ($this->importBerhasil > 0) {
+            session()->flash('success', "{$this->importBerhasil} data guru berhasil diimpor.");
+        }
     }
 
     public function render()

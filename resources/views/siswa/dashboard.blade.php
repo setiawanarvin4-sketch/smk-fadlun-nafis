@@ -16,7 +16,7 @@
         </div>
     </div>
 
-    {{-- Rekap kehadiran cepat --}}
+    {{-- Rekap kehadiran semester berjalan --}}
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         @php
             $warnaKelas = ['Hadir' => 'text-emerald-600', 'Izin' => 'text-amber-600', 'Sakit' => 'text-blue-600', 'Alpha' => 'text-red-600'];

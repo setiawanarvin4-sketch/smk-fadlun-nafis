@@ -1,7 +1,7 @@
 <div>
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-extrabold text-navy tracking-tight">Galeri</h1>
-        @can('kelola-data')
+        @can('kelola-konten')
             <button wire:click="create" class="btn-primary">+ Tambah</button>
         @endcan
     </div>
@@ -23,7 +23,7 @@
                         <span class="px-2 py-0.5 rounded text-xs {{ $item->aktif ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">
                             {{ $item->aktif ? 'Aktif' : 'Nonaktif' }}
                         </span>
-                        @can('kelola-data')
+                        @can('kelola-konten')
                             <div class="space-x-2 text-xs">
                                 <button wire:click="edit({{ $item->id }})" class="text-accent-blue px-1.5 py-1 inline-block">Edit</button>
                                 <button wire:click="konfirmasiHapus({{ $item->id }})" class="text-red-500 px-1.5 py-1 inline-block">Hapus</button>

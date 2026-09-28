@@ -21,13 +21,24 @@ class LoginForm extends Component
             'password' => 'required|string',
         ]);
 
-        $key = 'guru-login:'.$this->nip.'|'.request()->ip();
+    if (\App\Models\BlockedIp::sedangDiblokir(request()->ip())) {
+        $this->error = 'Akses dari alamat IP Anda telah diblokir sementara karena percobaan login mencurigakan. Hubungi admin sekolah untuk membuka blokir.';
+        return;
+    }
 
-        if (RateLimiter::tooManyAttempts($key, 5)) {
-            $this->error = 'Terlalu banyak percobaan. Coba lagi dalam beberapa menit.';
-            return;
-        }
+    $key = 'guru-login:'.$this->nip.'|'.request()->ip();
+    $keyIp = 'guru-login-ip:'.request()->ip();
 
+    if (RateLimiter::tooManyAttempts($keyIp, 20)) {
+        \App\Models\BlockedIp::blokir(request()->ip(), 'Otomatis: lebih dari 20 percobaan login gagal dalam waktu singkat (Portal Guru).');
+        $this->error = 'Akses dari alamat IP Anda telah diblokir sementara karena percobaan login mencurigakan. Hubungi admin sekolah untuk membuka blokir.';
+        return;
+    }
+
+    if (RateLimiter::tooManyAttempts($key, 5)) {
+        $this->error = 'Terlalu banyak percobaan. Coba lagi dalam beberapa menit.';
+        return;
+    }
         $guru = Guru::where('nip', $this->nip)->where('aktif', true)->first();
 
         if ($guru && Auth::attempt(['id' => $guru->user_id, 'password' => $this->password])) {
@@ -46,6 +57,7 @@ class LoginForm extends Component
         }
 
         RateLimiter::hit($key, 60);
+        RateLimiter::hit($keyIp, 60);
 
         LoginLog::create([
             'email' => $this->nip,

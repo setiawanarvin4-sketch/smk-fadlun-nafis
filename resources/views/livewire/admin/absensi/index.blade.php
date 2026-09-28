@@ -124,6 +124,14 @@
                         </p>
                     </div>
                     <button wire:click="$set('showDetail', false)" class="text-[#667085] hover:text-navy">✕</button>
+
+                @can('kelola-data')
+                    <button wire:click="batalkanSesi({{ $detailSesi->id }})"
+                        wire:confirm="Yakin batalkan sesi ini? Semua data absensi di sesi ini akan terhapus, dan guru harus mengisi ulang dari jadwal yang benar."
+                        class="text-red-600 text-xs font-semibold hover:underline">
+                        Batalkan Sesi (Salah Pilih Kelas)
+                    </button>
+                @endcan
                 </div>
 
                 @if($detailSesi->kegiatan || $detailSesi->kendala)

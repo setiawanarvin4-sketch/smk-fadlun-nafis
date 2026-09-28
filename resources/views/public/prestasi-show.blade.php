@@ -1,20 +1,20 @@
 <x-layouts.public :title="$item->judul" :description="$item->deskripsi ? Str::limit(strip_tags($item->deskripsi), 150) : null" :image="$item->foto ? asset('storage/'.$item->foto) : null">
-    <section class="relative bg-navy text-white overflow-hidden min-h-[62vh] flex items-end pb-20">
+    <section class="relative bg-navy text-white overflow-hidden min-h-[48vh] flex items-end pt-28 pb-20">
         @if($item->foto)
-            <img src="{{ asset('storage/'.$item->foto) }}" class="absolute inset-0 w-full h-full object-cover opacity-100 animate-hero-zoom">
+            <img src="{{ asset('storage/'.$item->foto) }}" alt="{{ $item->judul }}" class="absolute inset-0 w-full h-full object-cover opacity-100 animate-hero-zoom">
         @endif
-        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/15"></div>
-        <div class="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/75 via-black/35 to-transparent pointer-events-none"></div>
-        <div class="absolute -top-16 -left-16 w-72 h-72 bg-accent-teal/20 rounded-full blur-3xl animate-blob"></div>
-        <div class="absolute bottom-0 right-0 w-96 h-96 bg-accent-blue/15 rounded-full blur-3xl animate-blob" style="animation-delay:2s"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20"></div>
 
-        <div class="relative max-w-[800px] mx-auto px-4 text-center w-full">
-            <a href="{{ route('public.prestasi') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 border border-white/15 px-3.5 py-1.5 rounded-full mb-8 transition-colors">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                Kembali ke Prestasi
-            </a>
-            <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white/90 justify-center">{{ $item->kategori }} &middot; {{ $item->tingkat }}</p>
-            <h1 class="h-hero text-white mt-2" style="text-shadow: 0 2px 20px rgba(0,0,0,0.35)">{{ $item->judul }}</h1>
+        <a href="{{ route('public.prestasi') }}" aria-label="Kembali ke Prestasi"
+           class="absolute top-24 left-4 md:left-8 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 border border-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        </a>
+
+        <div class="relative max-w-[800px] mx-auto px-4 text-center w-full" style="text-shadow: 0 1px 3px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.7), 0 4px 24px rgba(0,0,0,0.45)">
+            <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white justify-center">{{ $item->kategori }} &middot; {{ $item->tingkat }}</p>
+            <h1 class="h-hero text-white mt-2">{{ $item->judul }}</h1>
+            @if($item->penulis)
+                <p class="text-xs text-white/70 mt-1">Dipublikasikan oleh {{ $item->penulis->nama_tampilan }}</p>            @endif
             <div class="w-14 h-1 bg-emerald-500 rounded-full mx-auto mt-5"></div>
         </div>
     </section>
@@ -81,13 +81,13 @@
                     <div class="grid {{ $item->foto_sertifikat && $item->foto_dokumentasi ? 'md:grid-cols-2' : '' }} gap-5">
                         @if($item->foto_sertifikat)
                             <a href="{{ asset('storage/'.$item->foto_sertifikat) }}" target="_blank" class="group block rounded-2xl overflow-hidden border border-[#EDEEF0] hover:shadow-lg transition-shadow">
-                                <img src="{{ asset('storage/'.$item->foto_sertifikat) }}" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset('storage/'.$item->foto_sertifikat) }}" alt="Sertifikat {{ $item->judul }}" loading="lazy" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-500">
                                 <p class="text-xs text-[#667085] p-3 border-t border-[#EDEEF0]">Sertifikat / Piagam</p>
                             </a>
                         @endif
                         @if($item->foto_dokumentasi)
                             <a href="{{ asset('storage/'.$item->foto_dokumentasi) }}" target="_blank" class="group block rounded-2xl overflow-hidden border border-[#EDEEF0] hover:shadow-lg transition-shadow">
-                                <img src="{{ asset('storage/'.$item->foto_dokumentasi) }}" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-500">
+                                <img src="{{ asset('storage/'.$item->foto_dokumentasi) }}" alt="Dokumentasi {{ $item->judul }}" loading="lazy" class="w-full aspect-[4/3] object-cover group-hover:scale-105 transition-transform duration-500">
                                 <p class="text-xs text-[#667085] p-3 border-t border-[#EDEEF0]">Dokumentasi Kegiatan</p>
                             </a>
                         @endif
@@ -118,7 +118,11 @@
                     @foreach($lainnya as $p)
                         <a href="{{ route('public.prestasi.show', $p->id) }}" class="group card-premium overflow-hidden">
                             <div class="overflow-hidden h-28">
-                                <img src="{{ asset('storage/'.$p->foto) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @if($p->foto)
+                                    <img src="{{ asset('storage/'.$p->foto) }}" alt="{{ $p->judul }}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                @else
+                                    <div class="w-full h-full bg-light-blue"></div>
+                                @endif
                             </div>
                             <div class="p-4">
                                 <p class="font-bold text-navy text-sm line-clamp-2 group-hover:text-accent-blue transition-colors">{{ $p->judul }}</p>

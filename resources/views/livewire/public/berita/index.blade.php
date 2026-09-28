@@ -5,7 +5,11 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         @forelse($items as $item)
             <a href="{{ route('public.berita.show', $item->slug) }}" class="group bg-white border border-[#E5E7EB] rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all">
-                <img src="{{ asset('storage/'.$item->thumbnail) }}" class="w-full h-40 object-cover">
+                @if($item->thumbnail)
+    <img src="{{ asset('storage/'.$item->thumbnail) }}" class="w-full h-40 object-cover">
+        @else
+        <div class="w-full h-40 bg-light-blue flex items-center justify-center text-accent-blue text-sm font-semibold">{{ $item->kategori }}</div>
+        @endif
                 <div class="p-4">
                     <span class="text-xs text-accent-blue font-medium">{{ $item->kategori }}</span>
                     <h3 class="font-semibold text-navy mt-1 mb-2 line-clamp-2 group-hover:text-accent-blue transition-colors">{{ $item->judul }}</h3>

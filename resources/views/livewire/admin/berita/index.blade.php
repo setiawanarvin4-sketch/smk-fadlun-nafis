@@ -1,7 +1,7 @@
 <div>
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-extrabold text-navy tracking-tight">Berita</h1>
-        @can('kelola-data')
+        @can('kelola-konten')
             <button wire:click="create" class="btn-primary">+ Tambah</button>
         @endcan
     </div>
@@ -49,7 +49,7 @@
                         </td>
                         <td class="p-3 text-[#667085]">{{ $item->tanggal_publikasi?->format('d/m/Y') ?? '-' }}</td>
                         <td class="p-3 text-right space-x-2">
-                            @can('kelola-data')
+                            @can('kelola-konten')
                                 <button wire:click="edit({{ $item->id }})" class="text-accent-blue px-1.5 py-1 inline-block">Edit</button>
                                 <button wire:click="konfirmasiHapus({{ $item->id }})" class="text-red-500 px-1.5 py-1 inline-block">Hapus</button>
                             @endcan

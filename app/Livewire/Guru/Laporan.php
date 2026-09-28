@@ -18,14 +18,10 @@ class Laporan extends Component
     public function exportSemester()
     {
         \App\Models\ActivityLog::catat('Export Rekap Semester', 'Laporan');
-        $tahunAjaran = now()->month >= 7 ? now()->year : now()->year - 1;
-        $semesterGanjil = now()->month >= 7 || now()->month <= 1;
 
-        [$mulai, $selesai] = $semesterGanjil
-            ? [\Carbon\Carbon::create($tahunAjaran, 7, 1), \Carbon\Carbon::create($tahunAjaran + 1, 1, 31)]
-            : [\Carbon\Carbon::create($tahunAjaran + 1, 2, 1), \Carbon\Carbon::create($tahunAjaran + 1, 6, 30)];
+        [$mulai, $selesai, $semesterGanjil, $tahunAjaran] = \App\Support\TahunAjaran::semesterBerjalan();
 
-        $guru = \App\Models\Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
 
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\RekapSemesterGuruExport($guru->id, $mulai, $selesai),

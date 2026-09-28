@@ -58,7 +58,9 @@ Route::get('/guru-tenaga-kependidikan', function () {
 Route::get('/data-siswa', fn () => view('public.siswa'))
     ->name('public.siswa')
     ->middleware('throttle:30,1');
-Route::get('/data-siswa/{id}', fn ($id) => view('public.siswa-show', ['id' => $id]))->name('public.siswa.show');
+Route::get('/data-siswa/{id}', fn ($id) => view('public.siswa-show', ['id' => $id]))
+    ->name('public.siswa.show')
+    ->middleware('throttle:30,1');
 Route::get('/ekstrakurikuler', function () {
     return view('public.ekstrakurikuler', [
         'items' => \App\Models\Ekstrakurikuler::where('aktif', true)->orderBy('nama')->get(),
@@ -173,7 +175,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard', function () {
     $user = auth()->user();
 
-    if (in_array($user->role, ['admin', 'kepala_sekolah'])) {
+    if (in_array($user->role, ['admin', 'kepala_sekolah', 'jurnalistik'])) {
         return redirect()->route('admin.dashboard');
     }
 
@@ -194,6 +196,7 @@ Route::prefix('guru')->name('guru.')->group(function () {
         Route::get('/laporan', fn () => view('guru.laporan'))->name('laporan');
         Route::get('/profil', fn () => view('guru.profil'))->name('profil');
         Route::get('/wali-kelas', fn () => view('guru.wali-kelas'))->name('wali-kelas');
+        Route::get('/riwayat-absensi', fn () => view('guru.riwayat-absensi'))->name('riwayat-absensi');
         });
 });
 
@@ -206,10 +209,14 @@ Route::prefix('portal-siswa')->name('siswa.')->group(function () {
                 ->where('user_id', auth()->id())->firstOrFail();
 
             $hariIni = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][now()->dayOfWeek];
+            [$mulaiSemester, $selesaiSemester] = \App\Support\TahunAjaran::semesterBerjalan();
 
             return view('siswa.dashboard', [
                 'siswa' => $siswa,
                 'rekapAbsensi' => \App\Models\Absensi::where('siswa_id', $siswa->id)
+                    ->whereHas('sesiMengajar', fn ($q) => $q->whereBetween('tanggal', [
+                        $mulaiSemester->toDateString(), $selesaiSemester->toDateString(),
+                    ]))
                     ->selectRaw('status, count(*) as jumlah')->groupBy('status')->pluck('jumlah', 'status'),
                 'jadwalHariIni' => \App\Models\JadwalPelajaran::where('kelas_id', $siswa->kelas_id)
                     ->where('hari', $hariIni)->where('aktif', true)
@@ -235,11 +242,18 @@ Route::prefix('portal-siswa')->name('siswa.')->group(function () {
 
         Route::get('/kehadiran', function () {
             $siswa = \App\Models\Siswa::where('user_id', auth()->id())->firstOrFail();
+            [$mulaiSemester, $selesaiSemester] = \App\Support\TahunAjaran::semesterBerjalan();
 
             return view('siswa.kehadiran', [
                 'rekapAbsensi' => \App\Models\Absensi::where('siswa_id', $siswa->id)
+                    ->whereHas('sesiMengajar', fn ($q) => $q->whereBetween('tanggal', [
+                        $mulaiSemester->toDateString(), $selesaiSemester->toDateString(),
+                    ]))
                     ->selectRaw('status, count(*) as jumlah')->groupBy('status')->pluck('jumlah', 'status'),
                 'riwayatAbsensi' => \App\Models\Absensi::where('siswa_id', $siswa->id)
+                    ->whereHas('sesiMengajar', fn ($q) => $q->whereBetween('tanggal', [
+                        $mulaiSemester->toDateString(), $selesaiSemester->toDateString(),
+                    ]))
                     ->with('sesiMengajar.mataPelajaran')
                     ->latest('id')->paginate(20),
             ]);
@@ -256,8 +270,8 @@ Route::prefix('portal-siswa')->name('siswa.')->group(function () {
     });
 });
 
-Route::prefix('portal-manajemen')->name('admin.')->middleware(['auth', 'role:admin,kepala_sekolah', 'verified.2fa'])->group(function () {
-    Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
+Route::prefix('portal-manajemen')->name('admin.')->middleware(['auth', 'role:admin,kepala_sekolah,jurnalistik', 'verified.2fa', 'batasi.jurnalistik'])->group(function () {
+    Route::get('/dashboard', fn () => auth()->user()->role === 'jurnalistik' ? view('admin.dashboard-jurnalistik') : view('admin.dashboard'))->name('dashboard');
     Route::get('/kompetensi', fn () => view('admin.kompetensi'))->name('kompetensi');
     Route::get('/alumni', fn () => view('admin.alumni'))->name('alumni');
     Route::get('/faq', fn () => view('admin.faq'))->name('faq');
@@ -288,8 +302,9 @@ Route::prefix('portal-manajemen')->name('admin.')->middleware(['auth', 'role:adm
     Route::get('/activity-log', fn () => view('admin.activity-log'))->name('activity-log');
     Route::get('/login-log', fn () => view('admin.login-log'))->name('login-log');
     Route::middleware('role:admin')->group(function () {
-        Route::get('/kelola-akun', fn () => view('admin.user'))->name('user');
+    Route::get('/kelola-akun', fn () => view('admin.user'))->name('user');
     Route::get('/kenaikan-kelas', fn () => view('admin.kenaikan-kelas'))->name('kenaikan-kelas');
+    Route::get('/backup-monitoring', fn () => view('admin.backup-monitoring'))->name('backup-monitoring');
     });
 
     Route::get('/cetak/siswa', fn () => view('admin.cetak.siswa'))->name('cetak.siswa');

@@ -12,7 +12,8 @@ class Show extends Component
     public function mount(int $id)
     {
         $this->siswa = Siswa::where('aktif', true)
-            ->with(['kelas', 'kompetensi', 'prestasi', 'ekstraWajib', 'ekstraPilihan'])
+            ->whereHas('prestasi')
+            ->with(['kelas', 'kompetensi', 'prestasi' => fn ($q) => $q->orderByDesc('tahun'), 'ekstraWajib', 'ekstraPilihan'])
             ->findOrFail($id);
     }
 

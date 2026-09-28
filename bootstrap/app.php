@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
             'verified.2fa' => \App\Http\Middleware\EnsureTwoFactorVerified::class,
+            'batasi.jurnalistik' => \App\Http\Middleware\BatasiAksesJurnalistik::class,
         ]);
 
         $middleware->web(append: [

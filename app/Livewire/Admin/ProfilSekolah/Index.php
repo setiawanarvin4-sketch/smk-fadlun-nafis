@@ -20,6 +20,7 @@ class Index extends Component
     public string $motto = '';
     public string $struktur_organisasi = '';
     public string $info_tata_usaha = '';
+    public string $video_profil_url = '';
     public $header_gambar = null;
     public ?string $existingHeaderGambar = null;
 
@@ -39,6 +40,7 @@ class Index extends Component
         $this->motto = $p->motto ?? '';
         $this->struktur_organisasi = $p->struktur_organisasi ?? '';
         $this->info_tata_usaha = $p->info_tata_usaha ?? '';
+        $this->video_profil_url = $p->video_profil_url ?? '';
         $this->existingHeaderGambar = $p->header_gambar;
 
         $s = SambutanKepsek::current();
@@ -54,9 +56,11 @@ class Index extends Component
 
         $this->validate([
             'header_gambar' => 'nullable|image|max:5120',
+            'video_profil_url' => 'nullable|url',
         ], [
             'header_gambar.max' => 'Ukuran foto sampul maksimal 5MB. File kamu terlalu besar, coba kompres dulu atau pakai foto lain.',
             'header_gambar.image' => 'File yang diupload harus berupa gambar (jpg, png, dll).',
+            'video_profil_url.url' => 'Link video harus berupa URL yang valid, contoh: https://www.youtube.com/watch?v=xxxxx',
         ]);
 
         $data = [
@@ -67,6 +71,7 @@ class Index extends Component
             'motto' => $this->motto,
             'struktur_organisasi' => \Mews\Purifier\Facades\Purifier::clean($this->struktur_organisasi),
             'info_tata_usaha' => $this->info_tata_usaha,
+            'video_profil_url' => $this->video_profil_url ?: null,
         ];
 
         $p = ProfilModel::current();
@@ -75,7 +80,7 @@ class Index extends Component
             if ($p->header_gambar) {
                 Storage::disk('public')->delete($p->header_gambar);
             }
-            $data['header_gambar'] = $this->header_gambar->store('profil-sekolah', 'public');
+            $data['header_gambar'] = \App\Support\ImageUploader::simpan($this->header_gambar, 'profil-sekolah', 1200);
         }
 
         $p->update($data);
@@ -104,7 +109,7 @@ class Index extends Component
             if ($s->foto) {
                 Storage::disk('public')->delete($s->foto);
             }
-            $data['foto'] = $this->sambutan_foto->store('sambutan', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->sambutan_foto, 'sambutan', 400);
         }
 
         $s->update($data);

@@ -44,7 +44,7 @@
                             </td>
                             <td class="p-3 text-right space-x-2">
                                 @can('kelola-data')
-                                    <button wire:click="edit({{ $item->id }})" </button>
+                                    <button wire:click="edit({{ $item->id }})" class="text-accent-blue font-medium">Edit</button>
                                     <button wire:click="konfirmasiHapus({{ $item->id }})" class="text-red-500">Hapus</button>
                                 @endcan
                             </td>

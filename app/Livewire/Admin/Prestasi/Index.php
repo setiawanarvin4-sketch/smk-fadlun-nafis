@@ -70,7 +70,7 @@ class Index extends Component
 
     public function save()
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
 
         $this->validate([
             'judul' => 'required|string|max:255',
@@ -90,6 +90,7 @@ class Index extends Component
             'siswa_id' => $this->siswa_id ?: null,
             'kompetensi_id' => $this->kompetensi_id ?: null,
             'deskripsi' => $this->deskripsi,
+            'user_id' => $this->editId ? null : auth()->id(),
         ];
 
         $existing = $this->editId ? Prestasi::find($this->editId) : null;
@@ -98,22 +99,23 @@ class Index extends Component
             if ($existing?->foto) {
                 Storage::disk('public')->delete($existing->foto);
             }
-            $data['foto'] = $this->foto->store('prestasi', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'prestasi', 1200);
         }
         if ($this->foto_sertifikat) {
             if ($existing?->foto_sertifikat) {
                 Storage::disk('public')->delete($existing->foto_sertifikat);
             }
-            $data['foto_sertifikat'] = $this->foto_sertifikat->store('prestasi/sertifikat', 'public');
+            $data['foto_sertifikat'] = \App\Support\ImageUploader::simpan($this->foto_sertifikat, 'prestasi/sertifikat', 1200);
         }
         if ($this->foto_dokumentasi) {
             if ($existing?->foto_dokumentasi) {
                 Storage::disk('public')->delete($existing->foto_dokumentasi);
             }
-            $data['foto_dokumentasi'] = $this->foto_dokumentasi->store('prestasi/dokumentasi', 'public');
+            $data['foto_dokumentasi'] = \App\Support\ImageUploader::simpan($this->foto_dokumentasi, 'prestasi/dokumentasi', 1200);
         }
 
         if ($this->editId) {
+            unset($data['user_id']);
             Prestasi::findOrFail($this->editId)->update($data);
             ActivityLog::catat('Mengubah Prestasi', 'Prestasi', $this->editId);
         } else {
@@ -137,7 +139,7 @@ class Index extends Component
 
     public function delete(int $id)
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
 
         $p = Prestasi::findOrFail($id);
         if ($p->foto) {

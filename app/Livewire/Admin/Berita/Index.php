@@ -54,7 +54,7 @@ class Index extends Component
 
     public function save()
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
 
         $this->validate([
             'judul' => 'required|string|max:255',
@@ -83,13 +83,13 @@ class Index extends Component
                     Storage::disk('public')->delete($old);
                 }
             }
-            $data['thumbnail'] = $this->thumbnail->store('berita', 'public');
+            $data['thumbnail'] = \App\Support\ImageUploader::simpan($this->thumbnail, 'berita', 1200);
         }
 
         if ($this->editId) {
             unset($data['slug']);
+            unset($data['user_id']); // penulis asli tidak berubah walau diedit orang lain
             Berita::findOrFail($this->editId)->update($data);
-            ActivityLog::catat('Mengubah Berita', 'Berita', $this->editId);
         } else {
             $b = Berita::create($data);
             ActivityLog::catat('Menambah Berita', 'Berita', $b->id);
@@ -111,7 +111,7 @@ class Index extends Component
 
     public function delete(int $id)
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
 
         Berita::findOrFail($id)->delete();
         ActivityLog::catat('Menghapus Berita', 'Berita', $id);

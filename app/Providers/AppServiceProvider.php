@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
     {
 
         \Illuminate\Support\Facades\Gate::define('kelola-data', fn ($user) => $user->role === 'admin');
+        \Illuminate\Support\Facades\Gate::define('kelola-konten', fn ($user) => in_array($user->role, ['admin', 'jurnalistik']));
 
         Blade::component('layouts.app', 'app-layout');
         Blade::component('layouts.guest', 'guest-layout');
@@ -68,7 +69,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with('menuUtama', $ambilMenu())->with('pengaturan', $ambilPengaturan());
         });
 
-        View::composer('components.page-hero', function ($view) use ($ambilProfil) {
+        View::composer(['components.page-hero', 'public.home'], function ($view) use ($ambilProfil) {
             $view->with('profilHero', $ambilProfil());
         });
 
@@ -76,44 +77,31 @@ class AppServiceProvider extends ServiceProvider
             $view->with('pengaturan', $ambilPengaturan());
         });
         View::composer('components.layouts.admin', function ($view) {
-            $izinMenunggu = \App\Models\GuruTidakHadir::where('status', 'Menunggu')->count();
-            $loginGagal = \App\Models\LoginLog::where('status', 'Gagal')
-                ->where('waktu', '>=', now()->subDay())
-                ->count();
+            // Dihitung tiap page-load admin sebelumnya (bukan cuma sekali per menit),
+            // padahal badge notifikasi ini wajar telat beberapa puluh detik. Cache
+            // pendek supaya tidak membebani DB saat admin berpindah-pindah halaman.
+            $notifAdmin = Cache::remember('notif-admin-badge', 30, function () {
+                $izinMenunggu = \App\Models\GuruTidakHadir::where('status', 'Menunggu')->count();
+                $loginGagal = \App\Models\LoginLog::where('status', 'Gagal')
+                    ->where('waktu', '>=', now()->subDay())
+                    ->count();
 
-            $hariMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            $hariIni = $hariMap[now()->dayOfWeek];
-            $tanggalIni = now()->toDateString();
-            $sekarang = now()->format('H:i:s');
+                $hariMap = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                $hariIni = $hariMap[now()->dayOfWeek];
+                $tanggalIni = now()->toDateString();
+                $sekarang = now()->format('H:i:s');
 
-            $sudahAda = \App\Models\SesiMengajar::where('tanggal', $tanggalIni)
-                ->whereNotNull('jadwal_pelajaran_id')
-                ->pluck('jadwal_pelajaran_id')
-                ->toArray();
+                $sesiTerlewat = \App\Support\GuruBelumAbsen::daftar()->count();
 
-            $tidakHadir = \App\Models\GuruTidakHadir::where('tanggal', $tanggalIni)
-                ->whereNotNull('jadwal_pelajaran_id')
-                ->pluck('jadwal_pelajaran_id')
-                ->toArray();
+                return [
+                    'izinMenunggu' => $izinMenunggu,
+                    'loginGagal' => $loginGagal,
+                    'sesiTerlewat' => $sesiTerlewat,
+                    'total' => $izinMenunggu + $loginGagal + $sesiTerlewat,
+                ];
+            });
 
-            // Kalau hari ini ditandai "hari khusus" (pulang cepat), jadwal yang mulainya
-            // sudah lewat jam pulang tidak dihitung sebagai sesi terlewat.
-            $jamPulangHariIni = \App\Models\HariKhusus::jamPulang($tanggalIni);
-
-            $sesiTerlewat = \App\Models\JadwalPelajaran::where('hari', $hariIni)
-                ->where('aktif', true)
-                ->where('jam_selesai', '<=', $sekarang)
-                ->get()
-                ->filter(fn ($j) => ! in_array($j->id, $sudahAda) && ! in_array($j->id, $tidakHadir))
-                ->reject(fn ($j) => $jamPulangHariIni && $j->jam_mulai >= $jamPulangHariIni)
-                ->count();
-
-            $view->with('notifAdmin', [
-                'izinMenunggu' => $izinMenunggu,
-                'loginGagal' => $loginGagal,
-                'sesiTerlewat' => $sesiTerlewat,
-                'total' => $izinMenunggu + $loginGagal + $sesiTerlewat,
-            ]);
+            $view->with('notifAdmin', $notifAdmin);
         });
     }
 }

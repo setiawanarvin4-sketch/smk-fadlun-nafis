@@ -47,7 +47,7 @@ class Index extends Component
 
     public function save()
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
 
         $this->validate([
             'judul' => 'required|string|max:255',
@@ -60,6 +60,7 @@ class Index extends Component
             'deskripsi' => $this->deskripsi,
             'kategori' => $this->kategori,
             'aktif' => $this->aktif,
+            'user_id' => $this->editId ? null : auth()->id(),
         ];
 
         if ($this->file) {
@@ -69,10 +70,11 @@ class Index extends Component
                     Storage::disk('public')->delete($old);
                 }
             }
-            $data['file'] = $this->file->store('galeri', 'public');
+            $data['file'] = \App\Support\ImageUploader::simpan($this->file, 'galeri', 1200);
         }
 
         if ($this->editId) {
+            unset($data['user_id']);
             Galeri::findOrFail($this->editId)->update($data);
             ActivityLog::catat('Mengubah Galeri', 'Galeri', $this->editId);
         } else {
@@ -96,7 +98,7 @@ class Index extends Component
 
     public function delete(int $id)
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
 
         $g = Galeri::findOrFail($id);
         if ($g->file) {

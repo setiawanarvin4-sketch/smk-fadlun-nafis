@@ -1,4 +1,11 @@
 <x-layouts.public>
+    @php
+        // Daftar foto latar: foto sampul dari Profil Sekolah dulu, lalu foto Hero Slider.
+        $daftarLatar = collect([$profilHero->header_gambar ?? null])
+            ->merge($heroSliders->pluck('foto'))
+            ->filter()->unique()->values();
+        $latar = fn (int $i) => $daftarLatar->isNotEmpty() ? $daftarLatar[$i % $daftarLatar->count()] : null;
+    @endphp
     <!-- POPUP PENGUMUMAN (dikelola dari Admin > Pengumuman Beranda; hanya di homepage, muncul tiap refresh kecuali user pilih "jangan tampilkan lagi") -->
     @if($pengumuman)
         <div x-data="{ open: false, jangan: false }"
@@ -51,47 +58,47 @@
 
     <!-- HERO -->
     @if($heroSliders->count())
-        <section class="relative bg-navy text-white min-h-[80svh] flex items-end"
-                 x-data="{ active: 0, total: {{ $heroSliders->count() }} }"
-                 x-init="setInterval(() => { active = (active + 1) % total }, 6000)">
+        <section class="relative bg-navy text-white h-[80svh]"
+            x-data="{ active: 0, total: {{ $heroSliders->count() }} }"
+            x-init="setInterval(() => { active = (active + 1) % total }, 6000)">
 
             <div class="absolute inset-0 overflow-hidden">
                 @foreach($heroSliders as $i => $hero)
                     <div x-show="active === {{ $i }}" x-cloak
-                         x-transition:enter="transition ease-out duration-1000"
-                         x-transition:enter-start="opacity-0"
-                         x-transition:enter-end="opacity-100"
-                         class="absolute inset-0">
-                        <img src="{{ asset('storage/'.$hero->foto) }}" class="absolute inset-0 w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent"></div>
+                        x-transition:enter="transition ease-out duration-1000"
+                        x-transition:enter-start="opacity-0 scale-105"
+                        x-transition:enter-end="opacity-100 scale-100"
+                        x-transition:leave="transition ease-in-out duration-700"
+                        x-transition:leave-start="opacity-100 scale-100"
+                        x-transition:leave-end="opacity-0 scale-100"
+                        class="absolute inset-0 z-10 w-full flex items-end">
+                        <img src="{{ asset('storage/'.$hero->foto) }}" alt="{{ $hero->judul }}" class="absolute inset-0 w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent"></div>
                     </div>
                 @endforeach
                 <!-- Lapisan gelap statis di atas foto, khusus area navbar — selalu ada,
                      tidak tergantung status scroll/JavaScript, supaya logo & menu selalu
                      kebaca walau foto slide-nya terang. -->
-                <div class="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-black/75 via-black/35 to-transparent pointer-events-none"></div>
-            </div>
-
-            <div class="absolute top-8 left-4 right-4 md:top-10 md:left-10 md:right-10 z-10 flex justify-between items-start pointer-events-none">
-                <div class="w-10 h-10 border-t-2 border-l-2 border-white/30"></div>
-                <div class="w-10 h-10 border-t-2 border-r-2 border-white/30"></div>
-            </div>
+            <div class="absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none"></div>            </div>
 
             @foreach($heroSliders as $i => $hero)
                 <div x-show="active === {{ $i }}" x-cloak
-                     x-transition:enter="transition ease-out duration-700 delay-200"
-                     x-transition:enter-start="opacity-0 translate-y-4"
+                     x-transition:enter="transition ease-out duration-1000 delay-150"
+                     x-transition:enter-start="opacity-0 translate-y-6"
                      x-transition:enter-end="opacity-100 translate-y-0"
-                     class="relative z-10 w-full">
-                    <div class="max-w-[1280px] w-full mx-auto px-4 md:px-10 pb-28 pt-32">
-                        <div class="max-w-2xl">
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="absolute inset-0 z-10 w-full flex items-end">
+                    <div class="max-w-[1280px] w-full mx-auto px-4 md:px-10 pb-16 sm:pb-20 pt-28 sm:pt-32">
+                        <div class="max-w-2xl" style="text-shadow: 0 2px 20px rgba(0,0,0,0.6)">
                             @if($hero->badge)
-                                <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white/90 border-l-2 border-emerald-500 pl-3 mb-6">
+                                <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white border-l-2 border-emerald-500 pl-3 mb-6">
                                     {{ $hero->badge }}
                                 </p>
                             @endif
-                            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mb-5">{{ $hero->judul }}</h1>
-                            <p class="text-white/75 text-base md:text-lg max-w-lg mb-9 leading-relaxed">{{ $hero->deskripsi }}</p>
+                            <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-5 line-clamp-2">{{ $hero->judul }}</h1>
+                            <p class="text-white/90 text-base md:text-lg max-w-lg mb-9 leading-relaxed line-clamp-2">{{ $hero->deskripsi }}</p>
                             <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
                                 @if($hero->button1_text && $hero->button1_url)
                                     <a href="{{ $hero->button1_url }}" class="group bg-white text-navy px-7 py-3.5 rounded-lg font-bold text-sm hover:bg-accent-blue hover:text-white transition-all duration-300 inline-flex items-center gap-2 shadow-xl">
@@ -138,11 +145,11 @@
 
         </section>
     @else
-        <section class="relative bg-gradient-to-br from-navy to-navy-dark text-white overflow-hidden min-h-[80svh] flex items-end">
-            <div class="relative max-w-[1280px] w-full mx-auto px-4 pb-24 pt-32">
+        <section class="relative bg-gradient-to-br from-navy to-navy-dark text-white overflow-hidden h-[80svh] flex items-end">
+            <div class="relative max-w-[1280px] w-full mx-auto px-4 pb-16 sm:pb-20 pt-28 sm:pt-32">
                 <div class="max-w-2xl">
                     <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white/90 border-l-2 border-emerald-500 pl-3 mb-6">SMK Fadlun Nafis Bangsri</p>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mb-5">Membentuk Generasi Berakhlak Mulia &amp; Siap Kerja</h1>
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] mb-5">Membentuk Generasi Berakhlak Mulia &amp; Siap Kerja</h1>
                     <p class="text-white/75 text-base md:text-lg max-w-lg mb-9 leading-relaxed">Belajar, Berkarya, dan Berprestasi bersama SMK Fadlun Nafis Bangsri.</p>
                     <div class="flex flex-wrap items-center gap-x-8 gap-y-4">
                         <a href="{{ route('public.ppdb') }}" class="group bg-white text-navy px-7 py-3.5 rounded-lg font-bold text-sm hover:bg-accent-blue hover:text-white transition-all duration-300 inline-flex items-center gap-2 shadow-xl">
@@ -187,6 +194,46 @@
         </section>
     @endif
 
+    <!-- VIDEO PROFIL (dikelola dari Admin > Profil Sekolah) -->
+    @if($profilHero->video_profil_url ?? false)
+        @php
+            $videoUrl = $profilHero->video_profil_url;
+            preg_match('/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/', $videoUrl, $m);
+            $ytId = $m[1] ?? null;
+            $embedUrl = $ytId ? 'https://www.youtube.com/embed/'.$ytId.'?autoplay=1' : $videoUrl;
+            $thumbUrl = $ytId ? 'https://img.youtube.com/vi/'.$ytId.'/hqdefault.jpg' : null;
+        @endphp
+        <section class="relative text-white overflow-hidden">
+            <x-latar-foto :foto="$latar(0)" />
+            <div class="relative max-w-[900px] mx-auto px-4 py-20 text-center">
+                <p class="inline-flex items-center gap-2 text-xs font-bold tracking-[0.18em] uppercase text-white/70">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.55-2.28A1 1 0 0121 8.62v6.76a1 1 0 01-1.45.9L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    Video Profil
+                </p>
+                <h2 class="h-section text-white mt-3 mb-8">Lihat Profil Sekolah Kami</h2>
+
+                <div x-data="{ play: false }" class="relative rounded-2xl overflow-hidden shadow-2xl aspect-video bg-black/40">
+                    <template x-if="!play">
+                        <button @click="play = true" class="absolute inset-0 w-full h-full group" aria-label="Putar video profil">
+                            @if($thumbUrl)
+                                <img src="{{ $thumbUrl }}" alt="Video Profil Sekolah" class="absolute inset-0 w-full h-full object-cover">
+                            @endif
+                            <div class="absolute inset-0 bg-black/35 group-hover:bg-black/25 transition-colors"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-white/95 group-hover:bg-white group-hover:scale-105 transition-all flex items-center justify-center shadow-xl">
+                                    <svg class="w-6 h-6 md:w-8 md:h-8 text-navy ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                </span>
+                            </div>
+                        </button>
+                    </template>
+                    <template x-if="play">
+                        <iframe class="absolute inset-0 w-full h-full" src="{{ $embedUrl }}" title="Video Profil Sekolah" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </template>
+                </div>
+            </div>
+        </section>
+    @endif
+
         <!-- POSTINGAN TERBARU -->
     @if($beritaTerbaru->count())
         <section class="max-w-[1280px] mx-auto px-4 py-12">
@@ -197,7 +244,11 @@
                 @foreach($beritaTerbaru as $b)
                     <a href="{{ route('public.berita.show', $b->slug) }}" class="group bg-white border border-[#EDEEF0] rounded-2xl overflow-hidden hover:shadow-lg transition-shadow duration-300">
                         <div class="relative overflow-hidden">
-                            <img src="{{ asset('storage/'.$b->thumbnail) }}" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500">
+                            @if($b->thumbnail)
+                                <img src="{{ asset('storage/'.$b->thumbnail) }}" alt="{{ $b->judul }}" loading="lazy" class="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-500">
+                            @else
+                                <div class="w-full h-44 bg-light-blue"></div>
+                            @endif
                             @if($b->kategori)
                                 <span class="absolute top-3 left-3 bg-white text-emerald-600 text-[11px] font-bold uppercase tracking-wide px-3 py-1.5 rounded-full shadow-sm">{{ $b->kategori }}</span>
                             @endif
@@ -225,13 +276,12 @@
     @endif
 
     <!-- STATISTIK (dihitung otomatis dari data asli, bukan input manual) -->
-    <section class="relative bg-gradient-to-br from-navy to-navy-dark overflow-hidden texture-rows">
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-accent-teal/10 rounded-full blur-3xl animate-blob"></div>
-        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl animate-blob" style="animation-delay:2s"></div>
-        <div class="relative max-w-[1280px] mx-auto px-4 py-12">
+        <section class="relative overflow-hidden">
+        <x-latar-foto :foto="$latar(1)" />
+        <div class="relative max-w-[1280px] mx-auto px-4 py-20">
             <div class="text-center mb-14">
                 <h2 class="h-section text-white mb-3">Pencapaian Sekolah</h2>
-                <p class="text-white/60 max-w-lg mx-auto">Angka yang mencerminkan kualitas SMK Fadlun Nafis Bangsri</p>
+                <p class="text-white/85 max-w-lg mx-auto">Angka yang mencerminkan kualitas SMK Fadlun Nafis Bangsri</p>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
@@ -244,13 +294,13 @@
                     ];
                 @endphp
                 @foreach($statistikAsli as $s)
-                    <div class="group relative border border-white/15 bg-white/[0.03] rounded-2xl p-7 text-center hover:bg-white/[0.06] hover:border-accent-teal/40 transition-all duration-300">
+                    <div class="group relative border border-white/25 bg-white/10 backdrop-blur-md rounded-2xl p-7 text-center shadow-lg shadow-black/20 hover:bg-white/20 hover:border-white/50 hover:-translate-y-1 transition-all duration-300">
                         <div class="w-11 h-11 rounded-xl bg-white/10 group-hover:bg-accent-teal/20 flex items-center justify-center mx-auto mb-5 transition-colors duration-300">
                             <svg class="w-5 h-5 text-accent-teal" fill="none" viewBox="0 0 24 24">{!! $ikonStatistik[$loop->index] ?? '' !!}</svg>
                         </div>
                         <p class="text-4xl md:text-5xl font-extrabold text-white tracking-tight" data-counter="{{ $s['nilai'] }}">0</p>
                         <div class="w-8 h-0.5 bg-emerald-500 mx-auto my-4"></div>
-                        <p class="text-sm text-white/60">{{ $s['label'] }}</p>
+                        <p class="text-sm text-white/85">{{ $s['label'] }}</p>
                     </div>
                 @endforeach
             </div>
@@ -453,19 +503,22 @@
     @endif
 
     <!-- PPDB CTA -->
-    <section class="relative bg-gradient-to-br from-navy to-navy-dark text-white overflow-hidden texture-rows">
-        <div class="absolute -top-24 -right-24 w-96 h-96 bg-accent-teal/10 rounded-full blur-3xl animate-blob"></div>
-        <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-accent-blue/10 rounded-full blur-3xl animate-blob" style="animation-delay:2s"></div>
+    <section class="relative text-white overflow-hidden">
+        <x-latar-foto :foto="$latar(2)" />
 
-        <div class="relative max-w-2xl mx-auto px-4 py-12 text-center">
-            <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white/70 mb-4">Pendaftaran Dibuka</p>
-            <h2 class="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight leading-tight">Penerimaan Peserta<br class="hidden md:block"> Didik Baru</h2>
-            <div class="w-10 h-px bg-emerald-500 mx-auto mb-4"></div>
-            <p class="text-white/60 text-base leading-relaxed mb-8 max-w-md mx-auto">Bergabunglah bersama SMK Fadlun Nafis Bangsri dan wujudkan masa depan yang siap kerja, siap kuliah, dan siap usaha.</p>
-            <a href="{{ route('public.ppdb') }}" class="group inline-flex items-center gap-2 border border-white/30 text-white px-9 py-4 rounded-lg font-bold text-sm hover:bg-white hover:text-navy transition-all duration-300">
-                Info PPDB
-                <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6l6 6-6 6"/></svg>
-            </a>
+        <div class="relative max-w-3xl mx-auto px-4 py-24 md:py-32 text-center" style="text-shadow: 0 2px 12px rgba(0,0,0,0.5)">
+            <p class="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.18em] uppercase text-white/80 mb-4">Info Pendaftaran</p>
+            <h2 class="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight leading-tight">Penerimaan Peserta<br class="hidden md:block"> Didik Baru</h2>
+            <p class="text-white/90 text-base leading-relaxed mb-10 max-w-md mx-auto">Bergabunglah bersama SMK Fadlun Nafis Bangsri dan wujudkan masa depan yang siap kerja, siap kuliah, dan siap usaha.</p>
+
+            <div class="flex flex-wrap items-center justify-center gap-4" style="text-shadow:none">
+                <a href="{{ route('public.ppdb') }}" class="inline-flex items-center justify-center bg-amber-500 hover:bg-amber-400 text-navy px-9 py-4 rounded-full font-bold text-sm shadow-lg shadow-amber-500/30 hover:-translate-y-0.5 transition-all duration-300">
+                    Informasi PPDB
+                </a>
+                <a href="{{ route('public.kontak') }}" class="inline-flex items-center justify-center border border-white/70 text-white px-9 py-4 rounded-full font-bold text-sm hover:bg-white hover:text-navy transition-all duration-300">
+                    Hubungi Kami
+                </a>
+            </div>
         </div>
     </section>
 </x-layouts.public>

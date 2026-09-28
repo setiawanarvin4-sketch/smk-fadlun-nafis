@@ -27,7 +27,7 @@
 @php
     $isHome = request()->routeIs('home');
     $navScrollThreshold = $isHome ? 420 : 160;
-    $heroGelap = request()->routeIs('home', 'public.akademik.show', 'public.ekstrakurikuler.show', 'public.prestasi.show');
+    $heroGelap = request()->routeIs('home', 'public.akademik.show', 'public.ekstrakurikuler.show', 'public.prestasi.show', 'public.berita.show', 'public.agenda.show');
 @endphp
 <body class="font-sans antialiased bg-[#F6F7FA] text-navy" x-data="{ mobileOpen: false, scrolled: {{ $heroGelap ? 'false' : 'true' }} }">
 
@@ -35,13 +35,14 @@
          Lapisan gradasi gelap tipis selalu ada di belakang saat transparan, supaya logo/menu tetap kebaca
          walau foto hero-nya terang, lalu berubah jadi putih blur pas discroll. -->
     <nav @if($heroGelap)
-         x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > {{ $navScrollThreshold }})"
-         @endif
-         class="fixed top-0 inset-x-0 z-50 transition-all duration-500"
-         :class="scrolled ? 'bg-white/85 backdrop-blur-md border-b border-[#E5E7EB] shadow-sm' : 'bg-transparent border-b border-transparent'">
-        <div class="max-w-[1280px] mx-auto px-4 flex items-center justify-between h-20"
-             :style="!scrolled && 'text-shadow: 0 1px 8px rgba(0,0,0,0.55)'">
+     x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > {{ $navScrollThreshold }})"
+     @endif
+     x-data="{ navDropdownOpen: false }"
+     class="fixed top-0 inset-x-0 z-50 transition-all duration-500"
+     :class="scrolled ? (navDropdownOpen ? 'bg-white/85 backdrop-blur-md border-b border-[#E5E7EB]' : 'bg-white/85 backdrop-blur-md border-b border-[#E5E7EB] shadow-sm') : 'bg-transparent border-b border-transparent'">
+        <div class="max-w-[1280px] mx-auto px-4 flex items-center justify-between h-20">
             <a href="{{ route('home') }}" class="flex items-center gap-2.5 font-bold flex-shrink-0 transition-colors"
+               :style="!scrolled && 'text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.6)'"
                :class="scrolled ? 'text-navy' : 'text-white'">
                 @if($pengaturan->logo)
                     <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-10 h-10 rounded-full object-cover transition-all" :class="!scrolled && 'ring-2 ring-white/40'">
@@ -64,7 +65,8 @@
                         @php $active = $isActiveUrl($menu->url); @endphp
                         <a href="{{ $menu->url }}"
                            class="relative px-3.5 py-2 rounded-lg transition-colors"
-                           :class="scrolled ? '{{ $active ? "text-accent-blue" : "text-navy hover:bg-[#F6F7FA] hover:text-accent-blue" }}' : '{{ $active ? "text-white" : "text-white/85 hover:text-white hover:bg-white/10" }}'">
+                           :style="!scrolled && 'text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.6)'"
+                           :class="scrolled ? '{{ $active ? "text-accent-blue" : "text-navy hover:bg-[#F6F7FA] hover:text-accent-blue" }}' : '{{ $active ? "text-white" : "text-white hover:text-white hover:bg-white/10" }}'">
                             {{ $menu->label }}
                             @if($active)
                                 <span class="absolute left-3.5 right-3.5 -bottom-0.5 h-0.5 rounded-full" :class="scrolled ? 'bg-accent-blue' : 'bg-white'"></span>
@@ -72,17 +74,20 @@
                         </a>
                     @else
                         @php $childActive = $menu->children->contains(fn ($c) => $isActiveUrl($c->url)); @endphp
-                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                            <button @click="open = !open"
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false; navDropdownOpen = false">
+                            <button @click="open = !open; navDropdownOpen = open"
                                     class="relative flex items-center gap-1 px-3.5 py-2 rounded-lg transition-colors"
-                                    :class="scrolled ? '{{ $childActive ? "text-accent-blue" : "text-navy hover:bg-[#F6F7FA] hover:text-accent-blue" }}' : '{{ $childActive ? "text-white" : "text-white/85 hover:text-white hover:bg-white/10" }}'">
+                                    :style="!scrolled && 'text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 2px 10px rgba(0,0,0,0.6)'"
+                                    :class="scrolled ? '{{ $childActive ? "text-accent-blue" : "text-navy hover:bg-[#F6F7FA] hover:text-accent-blue" }}' : '{{ $childActive ? "text-white" : "text-white hover:text-white hover:bg-white/10" }}'">
                                 {{ $menu->label }}
                                 <svg class="w-3.5 h-3.5 transition-transform" :class="open && 'rotate-180'" fill="none" viewBox="0 0 20 20"><path stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4 4-4"/></svg>
                                 @if($childActive)
                                     <span class="absolute left-3.5 right-3.5 -bottom-0.5 h-0.5 rounded-full" :class="scrolled ? 'bg-accent-blue' : 'bg-white'"></span>
                                 @endif
                             </button>
-                            <div x-show="open" x-transition x-cloak class="absolute left-0 top-full mt-2 w-56 bg-white border border-[#E5E7EB] rounded-xl shadow-xl py-2 z-50">
+                            <div x-show="open" x-transition x-cloak
+                                style="text-shadow: none;"
+                                class="absolute left-0 top-full mt-2 w-56 bg-white border border-[#E5E7EB] rounded-xl py-2 z-50">
                                 @foreach($menu->children as $child)
                                     @php $childItemActive = $isActiveUrl($child->url); @endphp
                                     <a href="{{ $child->url }}" class="flex items-center gap-2 px-4 py-2 text-sm text-navy hover:bg-[#F6F7FA] hover:text-accent-blue {{ $childItemActive ? 'text-accent-blue font-semibold bg-light-blue/50' : '' }}">
@@ -109,8 +114,6 @@
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
         </div>
-
-    </div>
     </nav>
 
     <!-- MOBILE MENU: panel geser dari kanan. Sengaja di luar <nav> (bukan

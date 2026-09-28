@@ -62,11 +62,16 @@
                         <input type="email" wire:model="email" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1">
                         @error('email') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
+                    <div x-show="$wire.role === 'jurnalistik'" class="mt-3">
+                        <label class="text-sm font-medium text-navy">Nama Pena (tampil di publik, boleh dikosongkan)</label>
+                        <input type="text" wire:model="nama_pena" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1" placeholder="Misal: Tim Jurnalistik SMK">
+                    </div>
                     <div>
                         <label class="text-sm text-[#667085]">Peran</label>
                         <select wire:model="role" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1">
                             <option value="kepala_sekolah">Kepala Sekolah (hanya lihat laporan)</option>
                             <option value="admin">Admin (akses penuh)</option>
+                            <option value="jurnalistik">Jurnalistik</option>
                         </select>
                     </div>
                     <div>

@@ -56,7 +56,7 @@ class Index extends Component
 
     public function save()
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses mengubah data.');
 
         $this->validate([
             'judul' => 'required|string|max:255',
@@ -82,7 +82,7 @@ class Index extends Component
                     Storage::disk('public')->delete($old);
                 }
             }
-            $data['foto'] = $this->foto->store('hero', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'hero', 1200);
         }
 
         if ($this->editId) {
@@ -109,7 +109,7 @@ class Index extends Component
 
     public function delete(int $id)
     {
-        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-data'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
+        abort_unless(\Illuminate\Support\Facades\Gate::allows('kelola-konten'), 403, 'Kepala Sekolah tidak punya akses menghapus data.');
 
         $h = HeroSlider::findOrFail($id);
         if ($h->foto) {

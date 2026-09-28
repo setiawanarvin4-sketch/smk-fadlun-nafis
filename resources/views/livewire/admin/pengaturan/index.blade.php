@@ -13,7 +13,7 @@
             <div>
                 <label class="text-sm text-[#667085]">Logo</label>
                 @if($pengaturan->logo)
-                    <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-16 h-16 rounded-xl object-cover border border-[#E5E7EB] mt-1 mb-2">
+                    <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-16 h-16 rounded-xl object-cover border border-[#E5E7EB] mt-1 mb-2">
                 @endif
                 <input type="file" wire:model="logo" accept="image/*" class="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 text-sm">
                 <div wire:loading wire:target="logo" class="text-xs text-[#667085] mt-1">Mengunggah...</div>
@@ -91,18 +91,9 @@
             <p class="text-xs text-[#667085]">Tips: buka Google Maps, klik kanan lokasi sekolah, koordinat akan muncul di menu yang tampil.</p>
         </div>
 
-        <!-- PPDB -->
-        <div class="card-premium p-6 space-y-4 hover:-translate-y-0">
-            <p class="h-eyebrow">PPDB</p>
-            <p class="text-sm font-bold text-navy -mt-2">Pendaftaran</p>
-            <div>
-                <label class="text-sm text-[#667085]">Link PPDB Resmi</label>
-                <input type="text" wire:model="link_ppdb" placeholder="https://ppdb.smkfadlunnafis.sch.id" class="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1">
-            </div>
-        </div>
-
-        <!-- RETENSI SELFIE dihapus: fitur verifikasi selfie sudah tidak dipakai lagi
-             sejak Portal Guru disederhanakan jadi check-in tanpa foto. -->
+        {{-- Link PPDB resmi dikelola di menu Admin > PPDB (field url_ppdb_resmi),
+             jadi tidak diduplikasi di sini. Field lama di halaman ini sempat
+             menunjuk ke properti Livewire yang tidak ada (link_ppdb), sudah dihapus. --}}
 
         <!-- MAINTENANCE -->
         <div class="card-premium p-6 hover:-translate-y-0">
@@ -132,6 +123,29 @@
                 <p class="text-xs text-[#667085] mt-1">Kosongkan / nonaktifkan kalau belum punya akun gateway WA — fitur ini tidak akan mengganggu proses absensi biasa walau belum diisi.</p>
             </div>
         </div>
+
+        <div class="card-premium p-6 mt-4">
+    <p class="text-sm font-semibold text-navy mb-3">Kalender Akademik</p>
+    <div class="grid grid-cols-2 gap-4">
+        <div>
+            <label class="text-sm text-[#667085]">Semester Ganjil Mulai Bulan</label>
+            <select wire:model="bulan_mulai_ganjil" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1">
+                @foreach(range(1,12) as $b)
+                    <option value="{{ $b }}">{{ \Carbon\Carbon::create()->month($b)->translatedFormat('F') }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <label class="text-sm text-[#667085]">Semester Genap Mulai Bulan</label>
+            <select wire:model="bulan_mulai_genap" class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1">
+                @foreach(range(1,12) as $b)
+                    <option value="{{ $b }}">{{ \Carbon\Carbon::create()->month($b)->translatedFormat('F') }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
+    <p class="text-xs text-[#667085] mt-2">Dipakai untuk menentukan rentang tanggal rekap kehadiran per semester di Portal Siswa & Laporan Guru.</p>
+</div>
 
         <button type="submit" class="btn-primary">Simpan Pengaturan</button>
     </form>

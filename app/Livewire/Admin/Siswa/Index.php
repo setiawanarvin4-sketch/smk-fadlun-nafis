@@ -43,6 +43,7 @@ class Index extends Component
     public bool $showExportModal = false;
     public string $exportTingkat = '';
     public ?int $exportKompetensiId = null;
+    public string $exportBulanKehadiran = '';
 
     public bool $showImportModal = false;
     public $fileImport = null;
@@ -122,7 +123,7 @@ class Index extends Component
                     Storage::disk('public')->delete($old);
                 }
             }
-            $data['foto'] = $this->foto->store('siswa', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'siswa', 400);
         }
 
         if ($this->editId) {
@@ -304,13 +305,32 @@ class Index extends Component
             $namaFile
         );
     }
+
     public function exportRekapKehadiran()
     {
         ActivityLog::catat('Export Rekap Kehadiran Siswa', 'Siswa');
 
+        $bulan = null;
+        $tahun = null;
+
+        if ($this->exportBulanKehadiran) {
+            $tanggal = \Carbon\Carbon::parse($this->exportBulanKehadiran . '-01');
+
+            $bulan = $tanggal->month;
+            $tahun = $tanggal->year;
+        }
+
+        $this->showExportModal = false;
+
         return Excel::download(
-            new \App\Exports\RekapKehadiranSiswaExport($this->filterKelas ?: null, now()->month, now()->year),
-            'rekap-kehadiran-siswa-'.now()->format('Y-m').'.xlsx'
+            new \App\Exports\RekapKehadiranSiswaExport(
+                $this->filterKelas ?: null,
+                $bulan,
+                $tahun
+            ),
+            'rekap-kehadiran-siswa-' .
+            ($this->exportBulanKehadiran ?: now()->format('Y-m')) .
+            '.xlsx'
         );
     }
 
@@ -350,11 +370,12 @@ class Index extends Component
             ->when($this->filterKompetensi, fn ($q) => $q->where('kompetensi_id', $this->filterKompetensi))
             ->orderBy('nama');
 
+        $kompetensiAktif = Kompetensi::where('aktif', true)->orderBy('nama')->get();
         return view('livewire.admin.siswa.index', [
             'items' => $query->paginate(15),
             'kelasList' => Kelas::orderBy('nama_kelas')->get(),
-            'kompetensiList' => Kompetensi::where('aktif', true)->get(),
-            'kompetensiExportList' => Kompetensi::where('aktif', true)->orderBy('nama')->get(),
+            'kompetensiList' => $kompetensiAktif,
+            'kompetensiExportList' => $kompetensiAktif,
             'ekstrakurikulerList' => \App\Models\Ekstrakurikuler::where('aktif', true)->orderBy('nama')->get(),
         ]);
     }

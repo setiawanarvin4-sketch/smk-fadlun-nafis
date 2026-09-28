@@ -5,7 +5,7 @@
             <button wire:click="downloadTemplate" class="btn-secondary text-sm">Unduh Template</button>
             <button wire:click="openImportModal" class="btn-secondary text-sm">Import Excel</button>
             <button wire:click="exportExcel" class="btn-secondary text-sm">Export Excel</button>
-            <button wire:click="exportRekapKehadiran" class="btn-secondary !px-4 !py-2 text-sm">
+            <button wire:click="$set('showExportModal', true)" class="btn-secondary !px-4 !py-2 text-sm">
                 Export Rekap Kehadiran
             </button>
             @can('kelola-data')
@@ -196,6 +196,72 @@
                         <button type="submit" class="btn-primary">Simpan</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+
+    <!-- MODAL EXPORT REKAP KEHADIRAN -->
+    @if($showExportModal)
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-12">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+
+                <h2 class="font-bold text-navy text-lg mb-2">
+                    Export Rekap Kehadiran
+                </h2>
+
+                <p class="text-sm text-[#667085] mb-5">
+                    Pilih bulan untuk rekap kehadiran siswa.
+                </p>
+
+                <div>
+                    <label class="text-sm text-[#667085]">
+                        Bulan Kehadiran
+                    </label>
+
+                    <input
+                        type="month"
+                        wire:model="exportBulanKehadiran"
+                        class="w-full border border-[#E5E7EB] rounded px-3 py-2 mt-1"
+                    >
+
+                    @error('exportBulanKehadiran')
+                        <span class="text-red-500 text-xs">
+                            {{ $message }}
+                        </span>
+                    @enderror
+                </div>
+
+                <p class="text-xs text-[#667085] mt-2">
+                    Kelas yang dipilih pada filter halaman akan digunakan.
+                    Jika filter kelas adalah "Semua Kelas", semua siswa akan diekspor.
+                </p>
+
+                <div class="flex justify-end gap-2 mt-6">
+
+                    <button
+                        type="button"
+                        wire:click="$set('showExportModal', false)"
+                        class="px-4 py-2 text-sm"
+                    >
+                        Batal
+                    </button>
+
+                    <button
+                        type="button"
+                        wire:click="exportRekapKehadiran"
+                        wire:loading.attr="disabled"
+                        class="btn-primary"
+                    >
+                        <span wire:loading.remove wire:target="exportRekapKehadiran">
+                            Export Excel
+                        </span>
+
+                        <span wire:loading wire:target="exportRekapKehadiran">
+                            Memproses...
+                        </span>
+                    </button>
+
+                </div>
             </div>
         </div>
     @endif

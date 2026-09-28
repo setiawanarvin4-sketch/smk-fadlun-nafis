@@ -58,9 +58,16 @@
                     Ini akan memindahkan <strong>{{ $jumlahSiswaAktif - $jumlahAkanLulus }} siswa</strong> ke kelas baru
                     dan meluluskan <strong>{{ $jumlahAkanLulus }} siswa</strong> kelas 12. Tindakan ini tidak bisa dibatalkan otomatis — pastikan data sudah benar sebelum lanjut.
                 </p>
+                <p class="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2 mb-3">
+                    ⚠️ Pastikan Anda sudah membuat backup database sebelum melanjutkan. Proses ini memindahkan seluruh siswa sekaligus dan tidak bisa dibatalkan.
+                </p>
                 <div class="flex gap-3">
                     <button wire:click="$set('showKonfirmasi', false)" class="flex-1 border border-[#E5E7EB] rounded-lg py-2.5 text-sm font-semibold">Batal</button>
-                    <button wire:click="proses" class="flex-1 bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold">Ya, Proses Sekarang</button>
+                    <button wire:click="proses" wire:loading.attr="disabled" wire:target="proses"
+                    class="flex-1 bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="proses">Ya, Proses Sekarang</span>
+                    <span wire:loading wire:target="proses">Memproses...</span>
+                </button>
                 </div>
             </div>
         </div>

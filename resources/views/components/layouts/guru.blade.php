@@ -20,7 +20,7 @@
             <div class="p-6 border-b border-[#E5E7EB]">
                 <div class="flex items-center gap-3">
                     @if($pengaturan->logo)
-                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
+                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
                     @else
                         <div class="w-11 h-11 rounded-xl bg-navy/5 border border-navy/10 flex items-center justify-center font-extrabold text-sm">SFN</div>
                     @endif
@@ -68,6 +68,10 @@
                     Wali Kelas
                 </a>
                 @endif
+                <a href="{{ route('guru.riwayat-absensi') }}" class="{{ $linkClass('guru.riwayat-absensi') }}">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    Riwayat Absensi
+                </a>
             </nav>
 
             <div class="p-4 border-t border-[#E5E7EB]">

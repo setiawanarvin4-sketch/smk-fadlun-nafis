@@ -19,7 +19,7 @@
             <div class="p-6 border-b border-[#E5E7EB] dark:border-gray-800">
                 <div class="flex items-center gap-3">
                     @if($pengaturan->logo)
-                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
+                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
                     @else
                         <div class="w-11 h-11 rounded-xl bg-navy/5 border border-navy/10 flex items-center justify-center font-extrabold text-sm">SFN</div>
                     @endif
@@ -36,6 +36,13 @@
                     $linkClass = fn($routeName) => 'relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 font-medium '
                         .($isActive($routeName) ? 'bg-navy text-white shadow-lg nav-active' : 'text-[#475467] dark:text-gray-400 hover:bg-[#F6F7FA] dark:hover:bg-gray-800 hover:text-navy dark:hover:text-white');
                 @endphp
+                @if(auth()->user()->role === 'jurnalistik')
+                    <a href="{{ route('admin.dashboard') }}" class="{{ $linkClass('admin.dashboard') }}">Dashboard</a>                    <a href="{{ route('admin.berita') }}" class="{{ $linkClass('admin.berita') }}">Berita</a>
+                    <a href="{{ route('admin.prestasi') }}" class="{{ $linkClass('admin.prestasi') }}">Prestasi</a>
+                    <a href="{{ route('admin.galeri') }}" class="{{ $linkClass('admin.galeri') }}">Galeri</a>
+                    <a href="{{ route('admin.agenda') }}" class="{{ $linkClass('admin.agenda') }}">Agenda</a>
+                    <a href="{{ route('admin.hero-slider') }}" class="{{ $linkClass('admin.hero-slider') }}">Hero Slider</a>
+                @else
 
                 <a href="{{ route('admin.dashboard') }}" class="{{ $linkClass('admin.dashboard') }} mb-4">
                     <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
@@ -129,6 +136,11 @@
                         <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $isActive('admin.user') ? 'bg-accent-blue' : 'bg-gray-300' }}"></span>
                         Kelola Akun
                     </a>
+                    <a href="{{ route('admin.backup-monitoring') }}" class="{{ $linkClass('admin.backup-monitoring') }}">
+                        <span class="w-1.5 h-1.5 rounded-full flex-shrink-0 {{ $isActive('admin.backup-monitoring') ? 'bg-accent-blue' : 'bg-gray-300' }}"></span>
+                        Monitoring Backup
+                    </a>
+                @endif
                 @endif
             </nav>
 
@@ -180,7 +192,13 @@
                     </div>
                     <div class="text-right hidden sm:block">
                         <p class="text-sm font-bold leading-tight text-navy">{{ auth()->user()->name }}</p>
-                        <p class="text-xs text-[#667085]">{{ auth()->user()->role === 'admin' ? 'Administrator' : 'Kepala Sekolah' }}</p>
+                        <p class="text-xs text-[#667085]">
+                        @switch(auth()->user()->role)
+                            @case('admin') Administrator @break
+                            @case('kepala_sekolah') Kepala Sekolah @break
+                            @case('jurnalistik') Tim Jurnalistik @break
+                        @endswitch
+                    </p>
                     </div>
                     <div class="w-10 h-10 rounded-full bg-gradient-to-br from-accent-blue to-accent-teal text-white flex items-center justify-center text-sm font-bold ring-2 ring-light-blue">
                         {{ substr(auth()->user()->name, 0, 1) }}

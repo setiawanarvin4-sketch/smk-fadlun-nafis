@@ -8,7 +8,7 @@ class Prestasi extends Model
 {
     protected $table = 'prestasi';
 
-    protected $fillable = ['judul', 'kategori', 'tingkat', 'penyelenggara', 'tahun', 'siswa_id', 'kompetensi_id', 'foto', 'foto_sertifikat', 'foto_dokumentasi', 'deskripsi'];
+    protected $fillable = ['judul', 'kategori', 'tingkat', 'penyelenggara', 'tahun', 'siswa_id', 'kompetensi_id', 'foto', 'foto_sertifikat', 'foto_dokumentasi', 'deskripsi', 'user_id'];
 
     public function siswa()
     {
@@ -18,5 +18,10 @@ class Prestasi extends Model
     public function kompetensi()
     {
         return $this->belongsTo(Kompetensi::class);
+    }
+
+    public function penulis()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

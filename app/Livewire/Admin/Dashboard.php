@@ -37,6 +37,22 @@ class Dashboard extends Component
         // ===== KARTU PERLU TINDAKAN =====
         $izinMenunggu = GuruTidakHadir::where('status', 'Menunggu')->count();
         $loginGagal24Jam = LoginLog::where('status', 'Gagal')->where('waktu', '>=', now()->subDay())->count();
+        $guruTanpaWa = \App\Models\Guru::where('aktif', true)->where(fn ($q) => $q->whereNull('no_wa')->orWhere('no_wa', ''))->count();
+        $totalGuru = \App\Models\Guru::where('aktif', true)->count();
+        $siswaTanpaWaWali = \App\Models\Siswa::where('aktif', true)->where(fn ($q) => $q->whereNull('no_wa_wali')->orWhere('no_wa_wali', ''))->count();
+        $totalSiswa = \App\Models\Siswa::where('aktif', true)->count();
+        $cronTerakhir = \Illuminate\Support\Facades\Cache::get('scheduler_heartbeat');
+        $cronSehat = $cronTerakhir && \Carbon\Carbon::parse($cronTerakhir)->gt(now()->subMinutes(5));
+
+        // ===== WIDGET BARU =====
+        $guruBelumAbsen = \App\Support\GuruBelumAbsen::daftar();
+        $guruTidakHadirHariIni = GuruTidakHadir::where('tanggal', $tanggalIni)
+            ->where('status', 'Disetujui')
+            ->with(['guru', 'kelas', 'mataPelajaran'])
+            ->get();
+        $agendaTerdekat = \App\Models\Agenda::akanDatang()->limit(3)->get();
+        $hariKhususTerdekat = \App\Models\HariKhusus::where('tanggal', '>=', $tanggalIni)
+            ->orderBy('tanggal')->limit(3)->get();
 
         // ===== GRAFIK TREN 7 HARI =====
         $trenAbsensi = collect(range(6, 0))->map(function ($i) {
@@ -56,6 +72,8 @@ class Dashboard extends Component
             'jumlahKompetensi' => Kompetensi::where('aktif', true)->count(),
             'absenHariIni' => $sesiHariIni->count(),
             'aktivitasTerbaru' => ActivityLog::with('user')->orderByDesc('created_at')->limit(6)->get(),
+            'cronTerakhir' => $cronTerakhir,
+            'cronSehat' => $cronSehat,
 
             'sesiTercatat' => $sesiTercatat,
             'sesiTepatWaktu' => $sesiTepatWaktu,
@@ -65,6 +83,14 @@ class Dashboard extends Component
 
             'izinMenunggu' => $izinMenunggu,
             'loginGagal24Jam' => $loginGagal24Jam,
+            'guruTanpaWa' => $guruTanpaWa,
+            'totalGuru' => $totalGuru,
+            'siswaTanpaWaWali' => $siswaTanpaWaWali,
+            'totalSiswa' => $totalSiswa,
+            'guruBelumAbsen' => $guruBelumAbsen,
+            'guruTidakHadirHariIni' => $guruTidakHadirHariIni,
+            'agendaTerdekat' => $agendaTerdekat,
+            'hariKhususTerdekat' => $hariKhususTerdekat,
 
             'trenAbsensi' => $trenAbsensi,
             'maxTren' => $maxTren,

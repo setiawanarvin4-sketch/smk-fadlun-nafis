@@ -8,11 +8,16 @@ class Agenda extends Model
 {
     protected $table = 'agenda';
 
-    protected $fillable = ['judul', 'tanggal', 'jam', 'lokasi', 'deskripsi', 'foto'];
+    protected $fillable = ['judul', 'tanggal', 'jam', 'lokasi', 'deskripsi', 'foto', 'user_id'];
 
     protected function casts(): array
     {
         return ['tanggal' => 'date'];
+    }
+
+    public function penulis()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function scopeAkanDatang($query)

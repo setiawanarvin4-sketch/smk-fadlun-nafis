@@ -30,7 +30,7 @@
 
             <a href="{{ route('home') }}" class="relative flex items-center gap-3 animate-fade-in-up">
                 @if($pengaturan->logo)
-                    <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-12 h-12 rounded-xl object-cover ring-2 ring-white/25 shadow-lg">
+                    <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-12 h-12 rounded-xl object-cover ring-2 ring-white/25 shadow-lg">
                 @else
                     <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center font-extrabold shadow-lg">SFN</div>
                 @endif
@@ -64,7 +64,7 @@
             <div class="w-full max-w-sm animate-fade-in-up" style="animation-delay:0.15s">
                 <div class="md:hidden flex items-center gap-3 mb-8 justify-center">
                     @if($pengaturan->logo)
-                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-12 h-12 rounded-xl object-cover">
+                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-12 h-12 rounded-xl object-cover">
                     @else
                         <div class="w-12 h-12 rounded-xl bg-navy text-white flex items-center justify-center font-extrabold">SFN</div>
                     @endif

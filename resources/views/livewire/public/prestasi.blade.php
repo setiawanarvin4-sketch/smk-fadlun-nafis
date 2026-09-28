@@ -9,7 +9,11 @@
         @forelse($items as $item)
             <a href="{{ route('public.prestasi.show', $item->id) }}" class="group card-premium overflow-hidden">
                 <div class="overflow-hidden">
-                    <img src="{{ asset('storage/'.$item->foto) }}" class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-500">
+                    @if($item->foto)
+                        <img src="{{ asset('storage/'.$item->foto) }}" class="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-500">
+                    @else
+                        <div class="w-full h-36 bg-light-blue flex items-center justify-center text-accent-blue text-sm font-semibold">{{ $item->kategori }}</div>
+                    @endif
                 </div>
                 <div class="p-4">
                     <span class="text-xs text-accent-blue font-medium">{{ $item->kategori }} &middot; {{ $item->tingkat }}</span>

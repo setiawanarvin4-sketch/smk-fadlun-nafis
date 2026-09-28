@@ -15,6 +15,7 @@ use Livewire\Component;
 class Index extends Component
 {
     public array $status = [];
+    public ?Guru $guru = null;
     public string $error = '';
     public string $tahap = 'daftar'; // daftar | masuk | lengkap | tidak_hadir | ditolak
     public string $materi = '';
@@ -40,9 +41,14 @@ class Index extends Component
     public string $statusTidakHadirTersimpan = '';
     public ?string $waktuSelesai = null;
 
+    public function mount()
+    {
+        $this->guru = Guru::where('user_id', auth()->id())->firstOrFail();
+    }
+
     public function daftarJadwalHariIni()
     {
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
         $hariMap = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
         $hariIni = $hariMap[now()->dayOfWeek];
         $tanggalIni = now()->toDateString();
@@ -101,7 +107,7 @@ class Index extends Component
     public function pilihJadwal(string $tipe, int $id)
     {
         $this->error = '';
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         $jadwal = $tipe === 'reguler'
             ? JadwalPelajaran::where('guru_id', $guru->id)->find($id)
@@ -144,7 +150,7 @@ class Index extends Component
         $this->showTidakHadirForm = false;
         $this->modeEdit = false;
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
         $tanggal = now()->toDateString();
 
         $kolomSumber = $this->sumberTipe === 'reguler' ? 'jadwal_pelajaran_id' : 'jadwal_pengganti_id';
@@ -182,6 +188,17 @@ class Index extends Component
         }
     }
 
+    private function batasWaktuEdit(SesiMengajar $sesi): ?\Carbon\Carbon
+    {
+        $jamSelesai = $sesi->jadwal_pelajaran_id
+            ? JadwalPelajaran::find($sesi->jadwal_pelajaran_id)?->jam_selesai
+            : JadwalPengganti::find($sesi->jadwal_pengganti_id)?->jam_selesai;
+
+        return $jamSelesai
+            ? \Carbon\Carbon::parse($sesi->tanggal->toDateString().' '.$jamSelesai)
+            : null;
+    }
+
     private function muatStatusUntukEdit(SesiMengajar $sesi): void
     {
         $this->materi = $sesi->materi ?? '';
@@ -191,12 +208,8 @@ class Index extends Component
         $this->status = Absensi::where('sesi_mengajar_id', $sesi->id)
             ->pluck('status', 'siswa_id')->toArray();
 
-        if ($sesi->waktu_mulai) {
-            $batasEdit = \Carbon\Carbon::parse($sesi->tanggal->toDateString().' '.$sesi->waktu_mulai)->addMinutes(15);
-            $this->bisaEdit = now()->lessThanOrEqualTo($batasEdit);
-        } else {
-            $this->bisaEdit = false;
-        }
+        $batasEdit = $this->batasWaktuEdit($sesi);
+        $this->bisaEdit = $batasEdit && now()->lessThanOrEqualTo($batasEdit);
     }
 
     public function batalPilihJadwal()
@@ -228,7 +241,21 @@ class Index extends Component
                 ."{$this->namaMapelTerpilih} hari ini, ".now()->translatedFormat('l, d F Y').".\n\n"
                 .'Mohon konfirmasi ke wali kelas apabila ada keterangan. Terima kasih.';
 
-            \App\Services\WhatsappService::kirim($siswa->no_wa_wali, $pesan);
+            \App\Jobs\KirimNotifikasiAbsensi::dispatch($siswaId, $pesan);
+        }
+    }
+
+    private function kirimRalatAlpha(int $siswaId, string $statusBaru): void
+    {
+        $siswa = Siswa::find($siswaId);
+        if ($siswa?->no_wa_wali) {
+            $pesan = "Assalamu'alaikum, Bapak/Ibu wali murid.\n\n"
+                ."Mohon maaf, ada koreksi data kehadiran ananda *{$siswa->nama}* pada mata pelajaran "
+                ."{$this->namaMapelTerpilih} hari ini, ".now()->translatedFormat('l, d F Y').". "
+                ."Status yang benar adalah *{$statusBaru}*, bukan Alpha seperti pemberitahuan sebelumnya.\n\n"
+                .'Mohon maaf atas kekeliruan ini. Terima kasih.';
+
+            \App\Jobs\KirimNotifikasiAbsensi::dispatch($siswaId, $pesan);
         }
     }
 
@@ -260,7 +287,7 @@ class Index extends Component
         $batasToleransi = date('H:i:s', strtotime($jadwal->jam_mulai.' +15 minutes'));
         $statusKedatangan = $sekarang > $batasToleransi ? 'Terlambat' : 'Tepat Waktu';
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         $sudahAda = SesiMengajar::where('guru_id', $guru->id)
             ->where($this->sumberTipe === 'reguler' ? 'jadwal_pelajaran_id' : 'jadwal_pengganti_id', $this->sumberId)
@@ -316,22 +343,20 @@ class Index extends Component
             return;
         }
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         $sesi = SesiMengajar::where('id', $this->sesiId)->where('guru_id', $guru->id)->first();
         if (! $sesi) return;
 
-        $batasEdit = $sesi->waktu_mulai
-            ? \Carbon\Carbon::parse($sesi->tanggal->toDateString().' '.$sesi->waktu_mulai)->addMinutes(15)
-            : null;
+        $batasEdit = $this->batasWaktuEdit($sesi);
 
         if (! $batasEdit || now()->greaterThan($batasEdit)) {
-            $this->error = 'Waktu untuk meralat absensi sudah habis (batas 15 menit sejak absen masuk).';
+            $this->error = 'Waktu untuk meralat absensi sudah habis (jam pelajaran ini sudah berakhir).';
             $this->bisaEdit = false;
             return;
         }
 
-                $siswaValid = Siswa::where('id', $siswaId)
+        $siswaValid = Siswa::where('id', $siswaId)
             ->where('kelas_id', $sesi->kelas_id)
             ->exists();
 
@@ -339,7 +364,7 @@ class Index extends Component
             $this->error = 'Siswa tidak ditemukan di kelas sesi ini.';
             return;
         }
-
+        
         $absensi = Absensi::firstOrNew([
             'sesi_mengajar_id' => $this->sesiId,
             'siswa_id' => $siswaId,
@@ -352,6 +377,8 @@ class Index extends Component
 
         if ($statusBaru === 'Alpha' && $statusLama !== 'Alpha') {
             $this->kirimNotifAlpha($siswaId);
+        } elseif ($statusLama === 'Alpha' && $statusBaru !== 'Alpha') {
+            $this->kirimRalatAlpha($siswaId, $statusBaru);
         }
 
         ActivityLog::catat('Meralat Absensi Siswa', 'Absensi', $this->sesiId);
@@ -361,7 +388,7 @@ class Index extends Component
     {
         if (! $this->sesiId) return;
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         SesiMengajar::where('id', $this->sesiId)->where('guru_id', $guru->id)->update([
             'materi' => $this->materi,
@@ -379,7 +406,7 @@ class Index extends Component
     {
         if (! $this->sesiId) return;
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
 
         $sesi = SesiMengajar::where('id', $this->sesiId)->where('guru_id', $guru->id)->first();
         if (! $sesi || $sesi->waktu_selesai) return;
@@ -400,7 +427,20 @@ class Index extends Component
     {
         $this->validate(['alasanTidakHadir' => 'required|in:Sakit,Izin,Dinas Luar,Lainnya']);
 
-        $guru = Guru::where('user_id', auth()->id())->firstOrFail();
+        $guru = $this->guru;
+        $kolomSumber = $this->sumberTipe === 'reguler' ? 'jadwal_pelajaran_id' : 'jadwal_pengganti_id';
+
+        $existing = GuruTidakHadir::where('guru_id', $guru->id)
+            ->where($kolomSumber, $this->sumberId)
+            ->where('tanggal', now()->toDateString())
+            ->first();
+
+        if ($existing) {
+            $this->tahap = 'tidak_hadir';
+            $this->statusTidakHadirTersimpan = $existing->status;
+            $this->showTidakHadirForm = false;
+            return;
+        }
 
         GuruTidakHadir::create([
             'guru_id' => $guru->id,

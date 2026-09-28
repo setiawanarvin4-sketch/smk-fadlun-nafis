@@ -1,5 +1,5 @@
 <x-layouts.siswa>
-    <h1 class="h-section mb-6">Riwayat Kehadiran</h1>
+    <h1 class="h-section mb-6">Riwayat Kehadiran Semester Ini</h1>
 
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         @php

@@ -1,9 +1,13 @@
 <div>
-    <div class="flex justify-between items-center mb-4">
+    <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
         <h1 class="text-xl font-extrabold text-navy tracking-tight">Data Guru</h1>
-        @can('kelola-data')
-            <button wire:click="create" class="btn-primary">+ Tambah</button>
-        @endcan
+        <div class="flex gap-2 flex-wrap">
+            @can('kelola-data')
+                <button wire:click="downloadTemplate" class="btn-secondary text-sm">Unduh Template</button>
+                <button wire:click="openImportModal" class="btn-secondary text-sm">Import Excel</button>
+                <button wire:click="create" class="btn-primary">+ Tambah</button>
+            @endcan
+        </div>
     </div>
 
     @if(session('success'))
@@ -48,6 +52,50 @@
     </div>
 
     <div class="mt-4">{{ $items->links() }}</div>
+
+        @if($showImportModal)
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-12">
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+                <h2 class="font-bold text-navy text-lg mb-2">Import Data Guru</h2>
+                <p class="text-sm text-[#667085] mb-5">
+                    File harus format <code>.xlsx</code>/<code>.csv</code>, urutan kolom sesuai template.
+                    Nama mata pelajaran di file harus <strong>persis sama</strong> dengan yang sudah ada di menu Mata Pelajaran.
+                    Password default akun hasil import: <code>Guru@</code> + NIP — sampaikan ke guru untuk segera diganti.
+                </p>
+
+                @if($importBerhasil !== null)
+                    <div class="bg-green-50 text-green-700 text-sm rounded-lg p-3 mb-4">
+                        {{ $importBerhasil }} data berhasil diimpor.
+                    </div>
+                @endif
+
+                @if(count($importGagal))
+                    <div class="bg-red-50 text-red-600 text-sm rounded-lg p-3 mb-4 max-h-40 overflow-y-auto">
+                        <p class="font-semibold mb-1">{{ count($importGagal) }} baris dilewati:</p>
+                        <ul class="list-disc list-inside space-y-0.5">
+                            @foreach($importGagal as $pesan)
+                                <li>{{ $pesan }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form wire:submit="importExcel" class="space-y-4">
+                    <input type="file" wire:model="fileImport" accept=".xlsx,.xls,.csv" class="w-full border border-[#E5E7EB] rounded px-3 py-2 text-sm">
+                    <div wire:loading wire:target="fileImport" class="text-xs text-[#667085]">Mengunggah file...</div>
+                    @error('fileImport') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+
+                    <div class="flex justify-end gap-2">
+                        <button type="button" wire:click="$set('showImportModal', false)" class="px-4 py-2 text-sm">Tutup</button>
+                        <button type="submit" wire:loading.attr="disabled" class="btn-primary">
+                            <span wire:loading.remove wire:target="importExcel">Proses Import</span>
+                            <span wire:loading wire:target="importExcel">Memproses...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
 
     @if($showModal)
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-12">

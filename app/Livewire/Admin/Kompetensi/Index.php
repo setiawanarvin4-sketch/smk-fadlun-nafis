@@ -110,20 +110,20 @@ class Index extends Component
             if ($existing?->foto) {
                 Storage::disk('public')->delete($existing->foto);
             }
-            $data['foto'] = $this->foto->store('kompetensi', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'kompetensi', 1200);
         }
         if ($this->kepala_jurusan_foto) {
             if ($existing?->kepala_jurusan_foto) {
                 Storage::disk('public')->delete($existing->kepala_jurusan_foto);
             }
-            $data['kepala_jurusan_foto'] = $this->kepala_jurusan_foto->store('kompetensi/kepala', 'public');
+            $data['kepala_jurusan_foto'] = \App\Support\ImageUploader::simpan($this->kepala_jurusan_foto, 'kompetensi/kepala', 400);
         }
         foreach (['foto_kegiatan_1', 'foto_kegiatan_2', 'foto_kegiatan_3'] as $field) {
             if ($this->$field) {
                 if ($existing?->$field) {
                     Storage::disk('public')->delete($existing->$field);
                 }
-                $data[$field] = $this->$field->store('kompetensi/kegiatan', 'public');
+                $data[$field] = \App\Support\ImageUploader::simpan($this->$field, 'kompetensi/kegiatan', 1200);
             }
         }
 

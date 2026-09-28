@@ -20,7 +20,7 @@
             <div class="p-6 border-b border-[#E5E7EB]">
                 <div class="flex items-center gap-3">
                     @if($pengaturan->logo)
-                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
+                        <img src="{{ asset('storage/'.$pengaturan->logo) }}" alt="Logo {{ $pengaturan->nama_sekolah }}" class="w-11 h-11 rounded-xl object-cover ring-2 ring-white/20">
                     @else
                         <div class="w-11 h-11 rounded-xl bg-navy/5 border border-navy/10 flex items-center justify-center font-extrabold text-sm">SFN</div>
                     @endif

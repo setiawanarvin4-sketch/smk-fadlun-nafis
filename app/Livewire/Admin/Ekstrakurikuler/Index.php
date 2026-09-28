@@ -91,7 +91,7 @@ class Index extends Component
             if ($existing?->foto) {
                 Storage::disk('public')->delete($existing->foto);
             }
-            $data['foto'] = $this->foto->store('ekstrakurikuler', 'public');
+            $data['foto'] = \App\Support\ImageUploader::simpan($this->foto, 'ekstrakurikuler', 1200);
         }
 
         foreach (['foto_kegiatan_1', 'foto_kegiatan_2', 'foto_kegiatan_3'] as $field) {
@@ -99,7 +99,7 @@ class Index extends Component
                 if ($existing?->$field) {
                     Storage::disk('public')->delete($existing->$field);
                 }
-                $data[$field] = $this->$field->store('ekstrakurikuler/kegiatan', 'public');
+                $data[$field] = \App\Support\ImageUploader::simpan($this->$field, 'ekstrakurikuler/kegiatan', 1200);
             }
         }
 

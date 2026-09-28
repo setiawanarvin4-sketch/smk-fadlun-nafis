@@ -38,7 +38,7 @@ class Index extends Component
         $galeri = $s->galeri ?? [];
 
         foreach ($this->galeriBaru as $file) {
-            $galeri[] = $file->store('siadik', 'public');
+            $galeri[] = \App\Support\ImageUploader::simpan($file, 'siadik', 1200);
         }
 
         $s->update([

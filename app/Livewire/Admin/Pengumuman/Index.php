@@ -73,7 +73,7 @@ class Index extends Component
             if ($existing?->gambar) {
                 Storage::disk('public')->delete($existing->gambar);
             }
-            $data['gambar'] = $this->gambar->store('pengumuman', 'public');
+            $data['gambar'] = \App\Support\ImageUploader::simpan($this->gambar, 'pengumuman', 1200);
         }
 
         if ($this->aktif) {
